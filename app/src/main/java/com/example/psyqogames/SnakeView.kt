@@ -10,6 +10,7 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import java.util.Random
@@ -30,7 +31,7 @@ class SnakeView @JvmOverloads constructor(
     private var running = false
     private var gameOver = false
     private var topBarrier = 0
-    private var bottomBarrier = 0 // Added bottom barrier variable
+    private var bottomBarrier = 0 
     private var direction = Direction.DOWN
     private val gameOverPaint = Paint().apply {
         color = Color.RED
@@ -71,10 +72,23 @@ class SnakeView @JvmOverloads constructor(
         color = Color.GREEN
     }
 
+    // Score properties
+    private var score = 0
+    private val scorePaint = Paint().apply {
+        color = Color.WHITE
+        textSize = 50f
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    }
+
     companion object {
         private const val TARGET_FPS = 4.0
         private const val FRAME_PERIOD = (1000.0 / TARGET_FPS).toLong()
+        private const val SWIPE_THRESHOLD = 50
     }
+
+    private var initialX: Float = 0f
+    private var initialY: Float = 0f
 
     init {
         holder.addCallback(this)
@@ -82,9 +96,9 @@ class SnakeView @JvmOverloads constructor(
         snakeHeadBitmap = BitmapFactory.decodeResource(resources, R.drawable.snakehead)
     }
 
-    fun setBarriers(top: Int, bottom: Int) { // Renamed and modified to accept both barriers
+    fun setBarriers(top: Int, bottomSystemNavHeight: Int) { 
         topBarrier = top
-        bottomBarrier = bottom
+        bottomBarrier = bottomSystemNavHeight
     }
 
     fun startGame() {
@@ -95,6 +109,7 @@ class SnakeView @JvmOverloads constructor(
         eatenAppleText = null
         textAlpha = 255
         textFrameCounter = 0
+        score = 0 // Reset score
         snakeBody.clear()
         snakeBody.add(Point(boxX, boxY)) // Add the initial head
         spawnApple()
@@ -106,8 +121,40 @@ class SnakeView @JvmOverloads constructor(
     }
 
     private fun spawnApple() {
-        appleX = random.nextInt(width - appleSize.toInt()).toFloat()
-        appleY = (topBarrier + random.nextInt(height - topBarrier - appleSize.toInt())).toFloat()
+        //sample values from test phone
+//        width = 1080
+//        appleSize = 50
+//        maxXPosition = 1010
+//
+//        horizontalPlayableWidthForRandom = 990
+//
+//        height = 2017
+//        topBarrier = 63
+//        bottomBarrier = 63
+//
+//        playableHeight = 1831
+
+
+        // Calculate horizontal spawn area
+        val minXPosition = 20f
+        val maxXPosition = (width - appleSize).toFloat() - 20f
+
+        val horizontalPlayableWidthForRandom = (maxXPosition - minXPosition).coerceAtLeast(0f).toInt()
+
+        if (horizontalPlayableWidthForRandom > 0) {
+            appleX = minXPosition + random.nextInt(horizontalPlayableWidthForRandom + 1).toFloat()
+        } else {
+            appleX = minXPosition
+        }
+
+        // Calculate vertical spawn area considering both top and bottom barriers
+        val playableHeight = height - topBarrier - bottomBarrier - appleSize.toInt() - 10
+
+        if (playableHeight > 0) {
+            appleY = (topBarrier + random.nextInt(playableHeight)).toFloat() + 10f
+        } else {
+            appleY = topBarrier.toFloat() + 20f // Fallback if no valid range
+        }
     }
 
     fun setDirection(newDirection: Direction) {
@@ -163,6 +210,7 @@ class SnakeView @JvmOverloads constructor(
             textAlpha = 255
             textFrameCounter = 0
             spawnApple()
+            incrementScore()
             // Snake grows because tail is NOT removed
         } else {
             // Remove tail if no apple was eaten to maintain length
@@ -172,7 +220,7 @@ class SnakeView @JvmOverloads constructor(
         }
 
         // Check for game over conditions (wall collision)
-        if (boxX < 0 || boxX + boxSize > width || boxY < topBarrier || boxY + boxSize > height - bottomBarrier) { // Used bottomBarrier here
+        if (boxX < 0 || boxX + boxSize > width || boxY < topBarrier || boxY + boxSize > height - bottomBarrier) { 
             gameOver = true
             running = false
         }
@@ -189,43 +237,101 @@ class SnakeView @JvmOverloads constructor(
         }
     }
 
+    private fun incrementScore() {
+        if (snakeBody.size < 5)
+        {
+            score = snakeBody.size * 5
+        }
+        else if (snakeBody.size < 10) {
+            score = snakeBody.size * 10
+        }
+        else if (snakeBody.size < 15) {
+            score = snakeBody.size * 15
+        }
+        else {
+            score = snakeBody.size * 25
+        }
+    }
+
+    override fun onTouchEvent(event: MotionEvent?):
+     Boolean {
+        when (event?.action) {
+            MotionEvent.ACTION_DOWN -> {
+                initialX = event.x
+                initialY = event.y
+                return true
+            }
+            MotionEvent.ACTION_UP -> {
+                val finalX = event.x
+                val finalY = event.y
+
+                val deltaX = finalX - initialX
+                val deltaY = finalY - initialY
+
+                if (Math.abs(deltaX) > Math.abs(deltaY)) { // Horizontal swipe
+                    if (Math.abs(deltaX) > SWIPE_THRESHOLD) {
+                        if (deltaX > 0) {
+                            setDirection(Direction.RIGHT)
+                        } else {
+                            setDirection(Direction.LEFT)
+                        }
+                    }
+                } else { // Vertical swipe
+                    if (Math.abs(deltaY) > SWIPE_THRESHOLD) {
+                        if (deltaY > 0) {
+                            setDirection(Direction.DOWN)
+                        } else {
+                            setDirection(Direction.UP)
+                        }
+                    }
+                }
+                return true
+            }
+        }
+        return super.onTouchEvent(event)
+    }
+
     private fun draw() {
         if (holder.surface.isValid) {
             val canvas: Canvas? = holder.lockCanvas()
             canvas?.let { canvasObject -> 
                 canvasObject.drawColor(Color.rgb(0, 0, 139))
+                // Draw top barrier
                 canvasObject.drawRect(0f, 0f, width.toFloat(), topBarrier.toFloat(), barrierPaint)
-                // Draw bottom barrier
+                // Draw bottom barrier (which is the space above the controls)
                 canvasObject.drawRect(0f, (height - bottomBarrier).toFloat(), width.toFloat(), height.toFloat(), barrierPaint)
+
+                // Draw snake body segments (excluding the head)
+                for (i in 1 until snakeBody.size) {
+                    val segment = snakeBody[i]
+                    canvasObject.drawRect(segment.x, segment.y, segment.x + boxSize, segment.y + boxSize, boxPaint)
+                }
+
+                val rotationAngle = when (direction) {
+                    Direction.DOWN -> 180f
+                    Direction.RIGHT -> 90f
+                    Direction.LEFT -> 270f
+                    else -> 0f // UP
+                }
+
+                matrix.reset()
+                matrix.postRotate(
+                    rotationAngle,
+                    snakeHeadBitmap.width / 2f,
+                    snakeHeadBitmap.height / 2f
+                )
+                matrix.postTranslate(boxX, boxY)
+
+                canvasObject.drawBitmap(snakeHeadBitmap, matrix, null)
+
+                // Draw score text centered horizontally in the top barrier
+                canvasObject.drawText("Score: $score", width / 2f, 50f, scorePaint)
 
                 if (gameOver) {
                     val centerX = width / 2f
                     val centerY = height / 2f
                     canvasObject.drawText("GAME OVER!", centerX, centerY, gameOverPaint)
                 } else {
-                    // Draw snake body segments (excluding the head)
-                    for (i in 1 until snakeBody.size) { 
-                        val segment = snakeBody[i]
-                        canvasObject.drawRect(segment.x, segment.y, segment.x + boxSize, segment.y + boxSize, boxPaint)
-                    }
-
-                    val rotationAngle = when (direction) {
-                        Direction.DOWN -> 180f
-                        Direction.RIGHT -> 90f
-                        Direction.LEFT -> 270f
-                        else -> 0f // UP
-                    }
-
-                    matrix.reset()
-                    matrix.postRotate(
-                        rotationAngle,
-                        snakeHeadBitmap.width / 2f,
-                        snakeHeadBitmap.height / 2f
-                    )
-                    matrix.postTranslate(boxX, boxY)
-
-                    canvasObject.drawBitmap(snakeHeadBitmap, matrix, null)
-
                     val appleRect = RectF(appleX, appleY, appleX + appleSize, appleY + appleSize)
                     canvasObject.drawBitmap(appleBitmap, null, appleRect, null)
 
