@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/snake_activity_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -19,9 +20,10 @@
         android:layout_height="wrap_content"
         android:columnCount="3"
         android:rowCount="2"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_spacer"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/snake_view">
 
         <Button
             android:id="@+id/new_button"
@@ -65,5 +67,14 @@
             android:layout_columnWeight="1"
             android:text="Right" />
     </GridLayout>
+
+    <View
+        android:id="@+id/bottom_spacer"
+        android:layout_width="0dp"
+        android:layout_height="45dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/controls_layout"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

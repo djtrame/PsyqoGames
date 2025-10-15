@@ -2,7 +2,10 @@ package com.example.psyqogames
 
 import android.os.Bundle
 import android.widget.Button
+import android.widget.GridLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
 class SnakeActivity : AppCompatActivity() {
 
@@ -19,6 +22,20 @@ class SnakeActivity : AppCompatActivity() {
         val downButton = findViewById<Button>(R.id.down_button)
         val rightButton = findViewById<Button>(R.id.right_button)
         val endButton = findViewById<Button>(R.id.end_button)
+
+        val controlsLayout = findViewById<GridLayout>(R.id.controls_layout)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.snake_activity_layout)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.post {
+                val controlsHeight = controlsLayout.height
+                //snakeView.setBarriers(systemBars.top, controlsHeight)
+
+                //setting the barriers to be the same height
+                snakeView.setBarriers(systemBars.top, systemBars.top)
+            }
+            insets
+        }
 
         newButton.setOnClickListener {
             snakeView.startGame()
