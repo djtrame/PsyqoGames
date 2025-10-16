@@ -23,6 +23,9 @@
         <activity
             android:name=".SnakeActivity"
             android:exported="false" />
+        <activity
+            android:name=".BlackjackActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

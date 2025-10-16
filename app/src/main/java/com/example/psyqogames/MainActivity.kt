@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
 
         val snakeButton = findViewById<Button>(R.id.snake_button)
         val ticTacToeButton = findViewById<Button>(R.id.tictactoe_button)
+        val blackjackButton = findViewById<Button>(R.id.blackjack_button)
 
         snakeButton.setOnClickListener {
             startActivity(Intent(this, SnakeActivity::class.java))
@@ -28,6 +29,10 @@ class MainActivity : AppCompatActivity() {
 
         ticTacToeButton.setOnClickListener {
             // TODO: Launch TicTacToe game
+        }
+
+        blackjackButton.setOnClickListener {
+            startActivity(Intent(this, BlackjackActivity::class.java))
         }
     }
 }

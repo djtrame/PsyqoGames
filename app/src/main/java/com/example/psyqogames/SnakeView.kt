@@ -1,6 +1,7 @@
 package com.example.psyqogames
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -74,12 +75,17 @@ class SnakeView @JvmOverloads constructor(
 
     // Score properties
     private var score = 0
+    private var highScore = 0
     private val scorePaint = Paint().apply {
         color = Color.WHITE
         textSize = 50f
         textAlign = Paint.Align.CENTER
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
     }
+
+    private val sharedPreferences: SharedPreferences
+    private val prefsName = "SnakeHighScorePrefs"
+    private val highScoreKey = "highScore"
 
     companion object {
         private const val TARGET_FPS = 4.0
@@ -94,6 +100,23 @@ class SnakeView @JvmOverloads constructor(
         holder.addCallback(this)
         appleBitmap = BitmapFactory.decodeResource(resources, R.drawable.apple)
         snakeHeadBitmap = BitmapFactory.decodeResource(resources, R.drawable.snakehead)
+        sharedPreferences = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+        loadHighScore()
+    }
+    private fun loadHighScore() {
+        highScore = sharedPreferences.getInt(highScoreKey, 0)
+    }
+    private fun saveHighScore() {
+        with(sharedPreferences.edit()) {
+            putInt(highScoreKey, highScore)
+            apply()
+        }
+    }
+    private fun checkHighScore() {
+        if (score > highScore) {
+            highScore = score
+            saveHighScore()
+        }
     }
 
     fun setBarriers(top: Int, bottomSystemNavHeight: Int) { 
@@ -223,6 +246,7 @@ class SnakeView @JvmOverloads constructor(
         if (boxX < 0 || boxX + boxSize > width || boxY < topBarrier || boxY + boxSize > height - bottomBarrier) { 
             gameOver = true
             running = false
+            checkHighScore()
         }
 
         // Check for self-collision
@@ -232,6 +256,7 @@ class SnakeView @JvmOverloads constructor(
             if (snakeRect.intersect(segmentRect)) {
                 gameOver = true
                 running = false
+                checkHighScore()
                 break // Exit loop once collision is detected
             }
         }
@@ -331,6 +356,7 @@ class SnakeView @JvmOverloads constructor(
                     val centerX = width / 2f
                     val centerY = height / 2f
                     canvasObject.drawText("GAME OVER!", centerX, centerY, gameOverPaint)
+                    canvasObject.drawText("High Score: $highScore", centerX, centerY + gameOverPaint.textSize, scorePaint)
                 } else {
                     val appleRect = RectF(appleX, appleY, appleX + appleSize, appleY + appleSize)
                     canvasObject.drawBitmap(appleBitmap, null, appleRect, null)
