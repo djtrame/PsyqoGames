@@ -20,7 +20,7 @@ class BlackjackView @JvmOverloads constructor(
 
     private var cardBitmap: Bitmap? = null
     private var cardBaseBitmap: Bitmap? = null
-    private var cardScale: Float = 0.3f // 70% smaller
+    private var cardScale: Float = 0.2f
     private val deck = mutableListOf<Card>()
 
     private val cardBasePaint = Paint().apply {
@@ -53,7 +53,6 @@ class BlackjackView @JvmOverloads constructor(
                 val originalBitmap = BitmapFactory.decodeResource(resources, resourceId)
                 val newWidth = (originalBitmap.width * cardScale).toInt()
                 val newHeight = (originalBitmap.height * cardScale).toInt()
-                //cardBaseBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
                 cardBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
             }
         }
@@ -66,11 +65,11 @@ class BlackjackView @JvmOverloads constructor(
         // Draw the background
         canvas.drawColor(Color.rgb(0, 100, 0))
 
-        //draw the base of the card as white since they are transparent PNG images
-        //canvas.drawRect(100f, segment.y, segment.x + boxSize, segment.y + boxSize, boxPaint)
-
-        // Draw the card
+        // Draw the card and its white background
         cardBitmap?.let { bitmap ->
+            // Draw the white backing rectangle first
+            canvas.drawRect(100f, 100f, 100f + bitmap.width, 100f + bitmap.height, cardBasePaint)
+            // Draw the card image on top of the white rectangle
             canvas.drawBitmap(bitmap, 100f, 100f, null)
         }
     }
