@@ -9,8 +9,7 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
 import com.example.psyqogames.Blackjack.Card
-import com.example.psyqogames.Blackjack.Rank
-import com.example.psyqogames.Blackjack.Suit
+import com.example.psyqogames.Blackjack.Deck
 
 class BlackjackView @JvmOverloads constructor(
     context: Context,
@@ -19,35 +18,16 @@ class BlackjackView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     private var cardBitmap: Bitmap? = null
-    private var cardBaseBitmap: Bitmap? = null
-    private var cardScale: Float = 0.2f
-    private val deck = mutableListOf<Card>()
+    private var cardScale: Float = 0.3f // 70% smaller
+    private val deck = Deck()
 
     private val cardBasePaint = Paint().apply {
         color = Color.WHITE
     }
 
-    init {
-        createAndShuffleDeck()
-    }
-
-    private fun createAndShuffleDeck() {
-        deck.clear()
-        for (suit in Suit.values()) {
-            for (rank in Rank.values()) {
-                deck.add(Card(suit, rank))
-            }
-        }
-        deck.shuffle()
-    }
-
     fun drawRandomCard() {
-        if (deck.isEmpty()) {
-            // For now, just recreate and shuffle if the deck is empty.
-            createAndShuffleDeck()
-            cardBitmap = null // Clear the card if deck is empty
-        } else {
-            val card = deck.removeAt(0)
+        val card = deck.drawCard()
+        if (card != null) {
             val resourceId = getResourceIdForCard(card)
             if (resourceId != 0) {
                 val originalBitmap = BitmapFactory.decodeResource(resources, resourceId)
@@ -55,6 +35,10 @@ class BlackjackView @JvmOverloads constructor(
                 val newHeight = (originalBitmap.height * cardScale).toInt()
                 cardBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
             }
+        } else {
+            // Optionally, handle the case where the deck is empty
+            deck.reset()
+            cardBitmap = null
         }
         invalidate() // Request a redraw
     }
