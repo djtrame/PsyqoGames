@@ -13,7 +13,7 @@ import android.widget.EditText
 class BlackjackActivity : AppCompatActivity() {
     private lateinit var blackjackView: BlackjackView
     private lateinit var dealerCard1: ImageView
-
+    private lateinit var dealerCard2: ImageView
     private lateinit var newGameButton: Button
     private lateinit var debugButton: Button
     private lateinit var drawCardButton: Button
@@ -25,9 +25,14 @@ class BlackjackActivity : AppCompatActivity() {
 
         blackjackView = findViewById(R.id.blackjack_view)
         dealerCard1 = findViewById(R.id.dealer_card1_image)
+        dealerCard2 = findViewById(R.id.dealer_card2_image)
         newGameButton = findViewById(R.id.new_game_button)
         debugButton = findViewById(R.id.debug_button)
         drawCardButton = findViewById(R.id.draw_card_button)
+
+        //set the dealer cards to appear face down when the view begins
+        dealerCard1.setImageResource(R.drawable.card_back)
+        dealerCard2.setImageResource(R.drawable.card_back)
 
 
         drawCardButton.setOnClickListener {

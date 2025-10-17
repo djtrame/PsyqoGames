@@ -28,19 +28,23 @@ class BlackjackView @JvmOverloads constructor(
     // This function now returns the drawn Card object
     fun drawRandomCard(): Card? {
         val card = shoe.drawCard()
-        if (card != null) {
-            val resourceId = getResourceIdForCard(card)
-            if (resourceId != 0) {
-                val originalBitmap = BitmapFactory.decodeResource(resources, resourceId)
-                val newWidth = (originalBitmap.width * cardScale).toInt()
-                val newHeight = (originalBitmap.height * cardScale).toInt()
-                cardBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
-            }
-        } else {
-            // If shoe is empty after trying to draw, it means reset/shuffle happened, clear bitmap
-            cardBitmap = null
-        }
-        invalidate() // Request a redraw
+
+//  We aren't drawing (painting) the card on the view here, rather that is being handled in BlackjackActivity.kt
+//        if (card != null) {
+//            val resourceId = getResourceIdForCard(card)
+//
+//            if (resourceId != 0) {
+//                val originalBitmap = BitmapFactory.decodeResource(resources, resourceId)
+//                val newWidth = 100 + (originalBitmap.width * cardScale).toInt()
+//                val newHeight = (originalBitmap.height * cardScale).toInt()
+//                cardBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
+//            }
+//        } else {
+//            // If shoe is empty after trying to draw, it means reset/shuffle happened, clear bitmap
+//            cardBitmap = null
+//        }
+//        invalidate() // Request a redraw
+
         return card // Return the drawn card
     }
 
