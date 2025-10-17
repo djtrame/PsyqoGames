@@ -1,7 +1,7 @@
 package com.example.psyqogames.Blackjack
 
 class Deck {
-    private val cards = mutableListOf<Card>()
+    val cards = mutableListOf<Card>() // Made public
 
     init {
         reset()

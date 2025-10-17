@@ -9,7 +9,7 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
 import com.example.psyqogames.Blackjack.Card
-import com.example.psyqogames.Blackjack.Deck
+import com.example.psyqogames.Blackjack.Shoe
 
 class BlackjackView @JvmOverloads constructor(
     context: Context,
@@ -19,14 +19,15 @@ class BlackjackView @JvmOverloads constructor(
 
     private var cardBitmap: Bitmap? = null
     private var cardScale: Float = 0.3f // 70% smaller
-    private val deck = Deck()
+    private val shoe = Shoe(numberOfDecks = 1) // Using a Shoe with 1 deck for simulation
 
     private val cardBasePaint = Paint().apply {
         color = Color.WHITE
     }
 
-    fun drawRandomCard() {
-        val card = deck.drawCard()
+    // This function now returns the drawn Card object
+    fun drawRandomCard(): Card? {
+        val card = shoe.drawCard()
         if (card != null) {
             val resourceId = getResourceIdForCard(card)
             if (resourceId != 0) {
@@ -36,26 +37,26 @@ class BlackjackView @JvmOverloads constructor(
                 cardBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
             }
         } else {
-            // Optionally, handle the case where the deck is empty
-            deck.reset()
+            // If shoe is empty after trying to draw, it means reset/shuffle happened, clear bitmap
             cardBitmap = null
         }
         invalidate() // Request a redraw
+        return card // Return the drawn card
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        // Draw the background
+        // Draw the background for the full Blackjack table
         canvas.drawColor(Color.rgb(0, 100, 0))
 
-        // Draw the card and its white background
-        cardBitmap?.let { bitmap ->
-            // Draw the white backing rectangle first
-            canvas.drawRect(100f, 100f, 100f + bitmap.width, 100f + bitmap.height, cardBasePaint)
-            // Draw the card image on top of the white rectangle
-            canvas.drawBitmap(bitmap, 100f, 100f, null)
-        }
+//        // Draw the card and its white background
+//        cardBitmap?.let {
+//            // Draw the white backing rectangle first
+//            canvas.drawRect(100f, 100f, 100f + it.width, 100f + it.height, cardBasePaint)
+//            // Draw the card image on top of the white rectangle
+//            canvas.drawBitmap(it, 100f, 100f, null)
+        //}
     }
 
     private fun getResourceIdForCard(card: Card): Int {

@@ -16,7 +16,7 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <TextView
-        android:id="@+id/player1_label2"
+        android:id="@+id/dealer_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Dealer"
@@ -27,6 +27,20 @@
         app:layout_constraintStart_toStartOf="@id/blackjack_view"
         app:layout_constraintTop_toTopOf="@id/blackjack_view"
         app:layout_constraintVertical_bias="0.091" />
+
+    <TextView
+        android:id="@+id/debug_text"
+        android:layout_width="381dp"
+        android:layout_height="94dp"
+        android:text="Debug text"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="@id/blackjack_view"
+        app:layout_constraintEnd_toEndOf="@id/blackjack_view"
+        app:layout_constraintHorizontal_bias="0.466"
+        app:layout_constraintStart_toStartOf="@id/blackjack_view"
+        app:layout_constraintTop_toTopOf="@id/blackjack_view"
+        app:layout_constraintVertical_bias="0.409" />
 
     <LinearLayout
         android:id="@+id/dealer_card_panel"
@@ -50,7 +64,8 @@
             android:layout_marginEnd="8dp"
             android:adjustViewBounds="true"
             android:scaleType="centerInside"
-            tools:src="@drawable/clubs_ace" />
+            tools:src="@drawable/clubs_ace"
+            android:background="#FFFFFF"/>
 
         <ImageView
             android:id="@+id/dealer_card2_image"
@@ -59,7 +74,8 @@
             android:layout_marginStart="8dp"
             android:adjustViewBounds="true"
             android:scaleType="centerInside"
-            tools:src="@drawable/spades_king" />
+            tools:src="@drawable/spades_king"
+            android:background="#FFFFFF"/>
 
     </LinearLayout>
 
@@ -83,12 +99,19 @@
         android:id="@+id/controls_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:columnCount="2"
-        android:rowCount="2"
+        android:columnCount="3"
+        android:rowCount="3"
         app:layout_constraintBottom_toTopOf="@+id/bottom_spacer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/blackjack_view">
+
+        <Button
+            android:id="@+id/new_game_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:text="New Game" />
 
         <Button
             android:id="@+id/draw_card_button"
@@ -96,6 +119,13 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:text="Draw Card" />
+
+        <Button
+            android:id="@+id/debug_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:text="Debug" />
 
     </GridLayout>
 
