@@ -20,7 +20,7 @@ import com.example.psyqogames.Blackjack.PlayerType
 
 //todo add a button for debug info and count the cards in the shoe and deck and print them out as we draw more
 class BlackjackActivity : AppCompatActivity() {
-    private lateinit var blackjackView: BlackjackView
+    //private lateinit var blackjackView: BlackjackView
     private lateinit var dealerCard1: ImageView
     private lateinit var dealerCard2: ImageView
     private lateinit var player1Card1: ImageView
@@ -37,6 +37,8 @@ class BlackjackActivity : AppCompatActivity() {
     private lateinit var dynamicImageView: ImageView
     private lateinit var dynamicLinearLayout: LinearLayout
 
+    private val CARD_HEIGHT_TO_WIDTH_RATIO = 1.5f
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +49,7 @@ class BlackjackActivity : AppCompatActivity() {
 
         //blackjackGame.printGameState()
 
-        blackjackView = findViewById(R.id.blackjack_view)
+        //blackjackView = findViewById(R.id.blackjack_view)
         dealerCard1 = findViewById(R.id.dealer_card1_image)
         dealerCard2 = findViewById(R.id.dealer_card2_image)
         debugText = findViewById(R.id.debug_text)
@@ -100,21 +102,46 @@ class BlackjackActivity : AppCompatActivity() {
 
         // Double Down Button
         //todo dynamically create a panel to display a card
-        //i'm stuck here because I can't seem to add anything to the blackjackView... it is it's own thing, not a Constraint or Linear Layout
         doubleDownButton.setOnClickListener {
             dynamicImageView.setImageResource(R.drawable.card_back)
+            dynamicImageView.rotation = 90f
+
+            val blackjackTable = findViewById<ConstraintLayout>(R.id.blackjack_table)
+            val player1Label = findViewById<TextView>(R.id.player1_label)
+
 
             dynamicLinearLayout.orientation = LinearLayout.HORIZONTAL
             dynamicLinearLayout.id = View.generateViewId()
 
+            //generally keep a 1.5 ratio of card height to width (but this one is on its side so yeah)
+//            val widthInDP = 120
+//            val heightInDP = 60
+            //val widthInDP = 150
+            val heightInDP = 95
+            val widthInDP = heightInDP * CARD_HEIGHT_TO_WIDTH_RATIO
+
+            val widthInPixels = (widthInDP * resources.displayMetrics.density).toInt()
+            val heightInPixels = (heightInDP * resources.displayMetrics.density).toInt()
+
+
             val params = ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.WRAP_CONTENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
+                //ConstraintLayout.LayoutParams.MATCH_PARENT,
+                //ConstraintLayout.LayoutParams.WRAP_CONTENT
+                widthInPixels,
+                heightInPixels
             )
 
+            params.topToBottom = R.id.player1_label
             params.bottomToTop = R.id.player1_card_panel
+            params.startToStart = R.id.player1_card_panel
+            params.endToEnd = R.id.blackjack_table
 
             dynamicLinearLayout.layoutParams = params
+
+            blackjackTable.addView(dynamicLinearLayout)
+
+
+            val marginPx = 8
 
             val layoutParamsLinear = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
