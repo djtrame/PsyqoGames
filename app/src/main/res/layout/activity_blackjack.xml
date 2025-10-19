@@ -26,12 +26,12 @@
         app:layout_constraintEnd_toEndOf="@id/blackjack_view"
         app:layout_constraintStart_toStartOf="@id/blackjack_view"
         app:layout_constraintTop_toTopOf="@id/blackjack_view"
-        app:layout_constraintVertical_bias="0.091" />
+        app:layout_constraintVertical_bias="0.042" />
 
     <TextView
         android:id="@+id/debug_text"
-        android:layout_width="381dp"
-        android:layout_height="94dp"
+        android:layout_width="389dp"
+        android:layout_height="225dp"
         android:text="Debug text"
         android:textColor="@android:color/white"
         android:textSize="18sp"
@@ -44,15 +44,15 @@
 
     <LinearLayout
         android:id="@+id/dealer_card_panel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
-        android:layout_marginBottom="100dp"
+        android:layout_width="130dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="50dp"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="@id/blackjack_view"
         app:layout_constraintEnd_toEndOf="@id/blackjack_view"
-        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="@id/blackjack_view"
         app:layout_constraintTop_toTopOf="@id/blackjack_view"
         app:layout_constraintVertical_bias="0.0">
@@ -63,9 +63,9 @@
             android:layout_height="100dp"
             android:layout_marginEnd="8dp"
             android:adjustViewBounds="true"
+            android:background="#FFFFFF"
             android:scaleType="centerInside"
-            tools:src="@drawable/card_back"
-            android:background="#FFFFFF"/>
+            tools:src="@drawable/card_back" />
 
         <ImageView
             android:id="@+id/dealer_card2_image"
@@ -73,9 +73,9 @@
             android:layout_height="100dp"
             android:layout_marginStart="8dp"
             android:adjustViewBounds="true"
+            android:background="#FFFFFF"
             android:scaleType="centerInside"
-            tools:src="@drawable/card_back"
-            android:background="#FFFFFF"/>
+            tools:src="@drawable/card_back" />
 
     </LinearLayout>
 
@@ -93,7 +93,43 @@
         app:layout_constraintTop_toTopOf="@id/blackjack_view"
         app:layout_constraintVertical_bias="0.649" />
 
- 
+
+    <LinearLayout
+        android:id="@+id/player1_card_panel"
+        android:layout_width="130dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="50dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/blackjack_view"
+        app:layout_constraintEnd_toEndOf="@id/blackjack_view"
+        app:layout_constraintHorizontal_bias="0.942"
+        app:layout_constraintStart_toStartOf="@id/blackjack_view"
+        app:layout_constraintTop_toTopOf="@id/blackjack_view"
+        app:layout_constraintVertical_bias="0.915">
+
+        <ImageView
+            android:id="@+id/player1_card1_image"
+            android:layout_width="60dp"
+            android:layout_height="100dp"
+            android:layout_marginEnd="8dp"
+            android:adjustViewBounds="true"
+            android:background="#FFFFFF"
+            android:scaleType="centerInside"
+            tools:src="@drawable/card_back" />
+
+        <ImageView
+            android:id="@+id/player1_card2_image"
+            android:layout_width="60dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="8dp"
+            android:adjustViewBounds="true"
+            android:background="#FFFFFF"
+            android:scaleType="centerInside"
+            tools:src="@drawable/card_back" />
+
+    </LinearLayout>
 
     <GridLayout
         android:id="@+id/controls_layout"
@@ -126,6 +162,13 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:text="Debug" />
+
+        <Button
+            android:id="@+id/deal_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:text="Deal" />
 
     </GridLayout>
 

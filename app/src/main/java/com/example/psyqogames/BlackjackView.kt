@@ -17,56 +17,25 @@ class BlackjackView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    private var cardBitmap: Bitmap? = null
-    private var cardScale: Float = 0.3f // 70% smaller
-    private val shoe = Shoe(numberOfDecks = 1) // Using a Shoe with 1 deck for simulation
+//    private var cardBitmap: Bitmap? = null
+//    private var cardScale: Float = 0.3f // 70% smaller
+//    private val shoe = Shoe(numberOfDecks = 1) // Using a Shoe with 1 deck for simulation
 
     private val cardBasePaint = Paint().apply {
         color = Color.WHITE
     }
 
     // This function now returns the drawn Card object
-    fun drawRandomCard(): Card? {
-        val card = shoe.drawCard()
-
-//  We aren't drawing (painting) the card on the view here, rather that is being handled in BlackjackActivity.kt
-//        if (card != null) {
-//            val resourceId = getResourceIdForCard(card)
+//    fun drawRandomCard(): Card? {
+//        val card = shoe.drawCard()
 //
-//            if (resourceId != 0) {
-//                val originalBitmap = BitmapFactory.decodeResource(resources, resourceId)
-//                val newWidth = 100 + (originalBitmap.width * cardScale).toInt()
-//                val newHeight = (originalBitmap.height * cardScale).toInt()
-//                cardBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
-//            }
-//        } else {
-//            // If shoe is empty after trying to draw, it means reset/shuffle happened, clear bitmap
-//            cardBitmap = null
-//        }
-//        invalidate() // Request a redraw
-
-        return card // Return the drawn card
-    }
+//        return card // Return the drawn card
+//    }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         // Draw the background for the full Blackjack table
         canvas.drawColor(Color.rgb(0, 100, 0))
-
-//        // Draw the card and its white background
-//        cardBitmap?.let {
-//            // Draw the white backing rectangle first
-//            canvas.drawRect(100f, 100f, 100f + it.width, 100f + it.height, cardBasePaint)
-//            // Draw the card image on top of the white rectangle
-//            canvas.drawBitmap(it, 100f, 100f, null)
-        //}
-    }
-
-    private fun getResourceIdForCard(card: Card): Int {
-        val suit = card.suit.name.lowercase()
-        val rank = card.rank.name.lowercase()
-        val resourceName = "${suit}_${rank}"
-        return resources.getIdentifier(resourceName, "drawable", context.packageName)
     }
 }
