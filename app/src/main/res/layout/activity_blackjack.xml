@@ -170,6 +170,13 @@
             android:layout_columnWeight="1"
             android:text="Deal" />
 
+        <Button
+            android:id="@+id/double_down_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:text="Double Down" />
+
     </GridLayout>
 
     <View

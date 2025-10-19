@@ -7,10 +7,13 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.psyqogames.Blackjack.Card
 import android.widget.Toast
 import android.app.AlertDialog
+import android.content.Context
+import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.example.psyqogames.Blackjack.BlackjackGame
 import com.example.psyqogames.Blackjack.Player
 import com.example.psyqogames.Blackjack.PlayerType
@@ -26,9 +29,14 @@ class BlackjackActivity : AppCompatActivity() {
     private lateinit var debugButton: Button
     private lateinit var drawCardButton: Button
     private lateinit var dealButton: Button
+    private lateinit var doubleDownButton: Button
     private lateinit var blackjackGame: BlackjackGame
     private lateinit var debugText: TextView
     private lateinit var player1CardPanel: LinearLayout
+    private lateinit var context: Context
+    private lateinit var dynamicImageView: ImageView
+    private lateinit var dynamicLinearLayout: LinearLayout
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,10 +58,11 @@ class BlackjackActivity : AppCompatActivity() {
         player1Card1 = findViewById(R.id.player1_card1_image)
         player1Card2 = findViewById(R.id.player1_card2_image)
         dealButton = findViewById(R.id.deal_button)
+        doubleDownButton = findViewById(R.id.double_down_button)
 
-        //set the dealer cards to appear face down when the view begins
-        //dealerCard1.setImageResource(R.drawable.card_back)
-        //dealerCard2.setImageResource(R.drawable.card_back)
+        context = this
+        dynamicImageView = ImageView(context)
+        dynamicLinearLayout = LinearLayout(context)
 
         drawCardButton.setOnClickListener {
             val drawnCard = blackjackGame.shoe.drawCard()
@@ -87,6 +96,38 @@ class BlackjackActivity : AppCompatActivity() {
             } ?: run { // If result is null, means no more cards or error
                 Toast.makeText(this, "No more cards to deal for this round.", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        // Double Down Button
+        //todo dynamically create a panel to display a card
+        //i'm stuck here because I can't seem to add anything to the blackjackView... it is it's own thing, not a Constraint or Linear Layout
+        doubleDownButton.setOnClickListener {
+            dynamicImageView.setImageResource(R.drawable.card_back)
+
+            dynamicLinearLayout.orientation = LinearLayout.HORIZONTAL
+            dynamicLinearLayout.id = View.generateViewId()
+
+            val params = ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+            )
+
+            params.bottomToTop = R.id.player1_card_panel
+
+            dynamicLinearLayout.layoutParams = params
+
+            val layoutParamsLinear = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            layoutParamsLinear.setMargins(10, 10, 10, 10)
+            dynamicImageView.layoutParams = layoutParamsLinear
+
+            dynamicLinearLayout.addView(dynamicImageView)
+
+
+            //val containerLayout: LinearLayout = findViewById(R.id.player1_card_panel)
+            //containerLayout.addView(dynamicImageView)
         }
     }
 
