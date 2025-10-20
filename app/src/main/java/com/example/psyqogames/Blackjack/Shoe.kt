@@ -30,9 +30,6 @@ class Shoe(private val numberOfDecks: Int = 1) {
     }
 
     fun remainingCards(): Int {
-        // Now correctly calculates remaining cards using the public 'cards' property of Deck
-        //return decks.sumOf { it.cards.size }
-
         return cards.count()
     }
 }

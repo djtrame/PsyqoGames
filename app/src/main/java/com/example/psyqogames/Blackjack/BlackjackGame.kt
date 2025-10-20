@@ -13,6 +13,11 @@ class BlackjackGame(private val _numPlayers: Int = 1) {
     var totalCardsToDeal: Int = 0
     var cardsDealt: Int = 0
 
+    var listTableRounds = mutableListOf<TableRound>()
+
+    var turnNumber: Int = 1
+
+    // Initialize the game with the specified number of players
     init {
         totalCardsToDeal = 2
 
@@ -24,6 +29,27 @@ class BlackjackGame(private val _numPlayers: Int = 1) {
 
         //add a dealer last
         players.add(Player(_playerType = PlayerType.DEALER))
+
+        //start the first round
+        listTableRounds.add(TableRound(players, turnNumber))
+    }
+
+    fun startGame() {
+
+    }
+
+    fun getCurrentPlayerRound(): PlayerRound? {
+        //get the current TableRound
+        var tableRound : TableRound = listTableRounds.last()
+
+        //get the current PlayerRound if they haven't bet yet
+        for (playerRound in tableRound.playerRounds) {
+            if (playerRound.startingBet == 0) {
+                return playerRound
+            }
+        }
+        //all of the players have made a starting bet
+        return null
     }
 
     fun deal(): DealResult? {
@@ -88,6 +114,14 @@ class BlackjackGame(private val _numPlayers: Int = 1) {
 
         for (player in players) {
             gameState = gameState + "\nPlayer Type: " + player.playerType + " Cards in hand: " + player.hand.count()
+        }
+
+        for (tableRound in listTableRounds) {
+            gameState = gameState + "\nTable round turn number: " + tableRound.turnNumber
+
+            for (playerRound in tableRound.playerRounds) {
+                gameState = gameState + "\n    Player turn number: " + playerRound.turnNumber + " Starting Bet: " + playerRound.startingBet
+            }
         }
 
         return gameState

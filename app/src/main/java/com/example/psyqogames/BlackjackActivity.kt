@@ -16,6 +16,7 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.example.psyqogames.Blackjack.BlackjackGame
 import com.example.psyqogames.Blackjack.Player
+import com.example.psyqogames.Blackjack.PlayerRound
 import com.example.psyqogames.Blackjack.PlayerType
 
 //todo add a button for debug info and count the cards in the shoe and deck and print them out as we draw more
@@ -28,7 +29,10 @@ class BlackjackActivity : AppCompatActivity() {
     private lateinit var newGameButton: Button
     private lateinit var debugButton: Button
     private lateinit var drawCardButton: Button
+    private lateinit var betButton: Button
     private lateinit var dealButton: Button
+    private lateinit var hitButton: Button
+    private lateinit var standButton: Button
     private lateinit var doubleDownButton: Button
     private lateinit var blackjackGame: BlackjackGame
     private lateinit var debugText: TextView
@@ -36,6 +40,7 @@ class BlackjackActivity : AppCompatActivity() {
     private lateinit var context: Context
     private lateinit var dynamicImageView: ImageView
     private lateinit var dynamicLinearLayout: LinearLayout
+    private lateinit var currentPlayerRound: PlayerRound
 
     private val CARD_HEIGHT_TO_WIDTH_RATIO = 1.5f
 
@@ -59,12 +64,17 @@ class BlackjackActivity : AppCompatActivity() {
         player1CardPanel = findViewById(R.id.player1_card_panel)
         player1Card1 = findViewById(R.id.player1_card1_image)
         player1Card2 = findViewById(R.id.player1_card2_image)
+        betButton = findViewById(R.id.bet_button)
         dealButton = findViewById(R.id.deal_button)
+        hitButton = findViewById(R.id.hit_button)
+        standButton = findViewById(R.id.stand_button)
         doubleDownButton = findViewById(R.id.double_down_button)
 
         context = this
         dynamicImageView = ImageView(context)
         dynamicLinearLayout = LinearLayout(context)
+
+
 
         drawCardButton.setOnClickListener {
             val drawnCard = blackjackGame.shoe.drawCard()
@@ -98,6 +108,47 @@ class BlackjackActivity : AppCompatActivity() {
             } ?: run { // If result is null, means no more cards or error
                 Toast.makeText(this, "No more cards to deal for this round.", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        // Bet Button
+        betButton.setOnClickListener {
+            //prompt for the first player's bet
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Enter Starting Bet")
+
+            // Use a LinearLayout to arrange the two EditTexts vertically
+            val layout = android.widget.LinearLayout(this)
+            layout.orientation = android.widget.LinearLayout.VERTICAL
+            layout.setPadding(48, 0, 48, 0) // Add some padding
+
+            // First EditText for the first value
+            val input1 = EditText(this)
+            input1.hint = "Enter Your Starting Bet"
+            input1.inputType = android.text.InputType.TYPE_CLASS_NUMBER // Specify it's for numbers
+            layout.addView(input1)
+
+            builder.setView(layout) // Set the LinearLayout containing the EditTexts as the view
+
+            // Set up the buttons
+            builder.setPositiveButton("Enter Bet") { dialog, which ->
+                val userInput1 = input1.text.toString()
+
+                if (userInput1.isNotEmpty()) {
+                    //get the current PlayerRound and set their bet equal to this value
+                    //might need better null handling.  not sure what !! does
+                    //todo really stuck here without being able to set a starting bet.  the value passed in isn't used.
+                    currentPlayerRound = blackjackGame.getCurrentPlayerRound()!!
+                    currentPlayerRound.startingBet = userInput1.toInt()
+                } else {
+                    //Toast.makeText(this, "Please enter both values", Toast.LENGTH_SHORT).show()
+                }
+            }
+            builder.setNegativeButton("Cancel") { dialog, which ->
+                dialog.cancel() // Close the dialog
+            }
+
+            // Show the dialog
+            builder.show()
         }
 
         // Double Down Button
