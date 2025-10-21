@@ -23,7 +23,7 @@ class TableRound(private val _playerList: List<Player>, private val _turnNumber:
     init {
         //create rounds for the players and the dealer
         for (player in _playerList) {
-            var playerRound = PlayerRound(0, _turnNumber, player.playerType)
+            var playerRound = PlayerRound(0, _turnNumber, player)
             playerRounds.add(playerRound)
         }
     }

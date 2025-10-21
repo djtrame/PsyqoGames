@@ -16,10 +16,12 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.example.psyqogames.Blackjack.BlackjackGame
 import com.example.psyqogames.Blackjack.Player
+import com.example.psyqogames.Blackjack.PlayerChoice
 import com.example.psyqogames.Blackjack.PlayerRound
 import com.example.psyqogames.Blackjack.PlayerType
+import org.w3c.dom.Text
 
-//todo add a button for debug info and count the cards in the shoe and deck and print them out as we draw more
+
 class BlackjackActivity : AppCompatActivity() {
     //private lateinit var blackjackView: BlackjackView
     private lateinit var dealerCard1: ImageView
@@ -36,11 +38,15 @@ class BlackjackActivity : AppCompatActivity() {
     private lateinit var doubleDownButton: Button
     private lateinit var blackjackGame: BlackjackGame
     private lateinit var debugText: TextView
+    private lateinit var player1Label: TextView
     private lateinit var player1CardPanel: LinearLayout
     private lateinit var context: Context
     private lateinit var dynamicImageView: ImageView
     private lateinit var dynamicLinearLayout: LinearLayout
     private lateinit var currentPlayerRound: PlayerRound
+    private lateinit var listDynamicViews: MutableList<ImageView>
+
+
 
     private val CARD_HEIGHT_TO_WIDTH_RATIO = 1.5f
 
@@ -69,10 +75,12 @@ class BlackjackActivity : AppCompatActivity() {
         hitButton = findViewById(R.id.hit_button)
         standButton = findViewById(R.id.stand_button)
         doubleDownButton = findViewById(R.id.double_down_button)
+        player1Label = findViewById(R.id.player1_label)
+
 
         context = this
-        dynamicImageView = ImageView(context)
-        dynamicLinearLayout = LinearLayout(context)
+        listDynamicViews = mutableListOf<ImageView>()
+
 
 
 
@@ -88,26 +96,13 @@ class BlackjackActivity : AppCompatActivity() {
 
         // New Game Button
         newGameButton.setOnClickListener {
-            showInputPrompt()
+            showNewGameInputPrompt()
         }
 
         // Debug Button
         debugButton.setOnClickListener {
             //shrinkPlayer1CardPanel()
             debugText.text = blackjackGame.getGameStateAsString()
-        }
-
-        // Deal Button
-        dealButton.setOnClickListener {
-            val dealResult = blackjackGame.deal()
-
-            //display the cards dealt to the players and dealer
-            dealResult?.let { dealInfo ->
-                // Update UI for THIS SPECIFIC player/card
-                displayCardForPlayer(dealInfo.player, dealInfo.card)
-            } ?: run { // If result is null, means no more cards or error
-                Toast.makeText(this, "No more cards to deal for this round.", Toast.LENGTH_SHORT).show()
-            }
         }
 
         // Bet Button
@@ -136,9 +131,11 @@ class BlackjackActivity : AppCompatActivity() {
                 if (userInput1.isNotEmpty()) {
                     //get the current PlayerRound and set their bet equal to this value
                     //might need better null handling.  not sure what !! does
-                    //todo really stuck here without being able to set a starting bet.  the value passed in isn't used.
+                    //todo take the starting bet, and begin to handle hitting and standing
+                    //maybe move some of this stuff into BlackjackGame.kt
                     currentPlayerRound = blackjackGame.getCurrentPlayerRound()!!
                     currentPlayerRound.startingBet = userInput1.toInt()
+                    debugText.text = currentPlayerRound.getPlayerRoundStateAsString()
                 } else {
                     //Toast.makeText(this, "Please enter both values", Toast.LENGTH_SHORT).show()
                 }
@@ -151,15 +148,69 @@ class BlackjackActivity : AppCompatActivity() {
             builder.show()
         }
 
+        // Deal Button
+        dealButton.setOnClickListener {
+            val dealResult = blackjackGame.deal()
+
+            //display the cards dealt to the players and dealer
+            dealResult?.let { dealInfo ->
+                // Update UI for THIS SPECIFIC player/card
+                displayCardForPlayer(dealInfo.player, dealInfo.card)
+
+                //this will handle only 1 player... will need lots of work to loop through future players
+                if (dealInfo.player.playerType == PlayerType.HUMAN) {
+                    //get the soft and hard values of the hand
+                    player1Label.text = showHandValue(dealInfo.player)
+                }
+            } ?: run { // If result is null, means no more cards or error
+                Toast.makeText(this, "No more cards to deal for this round.", Toast.LENGTH_SHORT).show()
+            }
+
+            debugText.text = blackjackGame.getGameStateAsString()
+        }
+
+        // Hit Button
+        hitButton.setOnClickListener {
+            var hitResult = blackjackGame.hit()
+
+
+            //for starters just draw a 3rd card in the player 1 card panel.  We'll worry about the rest later
+            dynamicImageView = ImageView(context) //trying to use this same object variable in hit button and dd button sections
+            dynamicImageView.setImageResource(getResourceIdForCard(hitResult.card))
+
+            val widthInDP = 60
+            val heightInDP = widthInDP * CARD_HEIGHT_TO_WIDTH_RATIO
+
+            val widthInPixels = (widthInDP * resources.displayMetrics.density).toInt()
+            val heightInPixels = (heightInDP * resources.displayMetrics.density).toInt()
+
+            val layoutParamsLinear = LinearLayout.LayoutParams(
+                widthInPixels,
+                heightInPixels
+            )
+            val marginPx = 2
+
+            layoutParamsLinear.setMargins(marginPx, marginPx,marginPx,marginPx)
+            dynamicImageView.layoutParams = layoutParamsLinear
+
+            dynamicImageView.setBackgroundResource(R.color.white)
+
+            listDynamicViews.add(dynamicImageView)
+
+            player1CardPanel.addView(dynamicImageView)
+
+            player1Label.text = showHandValue(hitResult.player)
+        }
+
         // Double Down Button
-        //todo dynamically create a panel to display a card
         doubleDownButton.setOnClickListener {
+            dynamicImageView = ImageView(context)
+            dynamicLinearLayout = LinearLayout(context)
             dynamicImageView.setImageResource(R.drawable.card_back)
             dynamicImageView.rotation = 90f
 
             val blackjackTable = findViewById<ConstraintLayout>(R.id.blackjack_table)
             val player1Label = findViewById<TextView>(R.id.player1_label)
-
 
             dynamicLinearLayout.orientation = LinearLayout.HORIZONTAL
             dynamicLinearLayout.id = View.generateViewId()
@@ -168,12 +219,11 @@ class BlackjackActivity : AppCompatActivity() {
 //            val widthInDP = 120
 //            val heightInDP = 60
             //val widthInDP = 150
-            val heightInDP = 95
+            val heightInDP = 90
             val widthInDP = heightInDP * CARD_HEIGHT_TO_WIDTH_RATIO
 
             val widthInPixels = (widthInDP * resources.displayMetrics.density).toInt()
             val heightInPixels = (heightInDP * resources.displayMetrics.density).toInt()
-
 
             val params = ConstraintLayout.LayoutParams(
                 //ConstraintLayout.LayoutParams.MATCH_PARENT,
@@ -191,7 +241,6 @@ class BlackjackActivity : AppCompatActivity() {
 
             blackjackTable.addView(dynamicLinearLayout)
 
-
             val marginPx = 8
 
             val layoutParamsLinear = LinearLayout.LayoutParams(
@@ -202,7 +251,6 @@ class BlackjackActivity : AppCompatActivity() {
             dynamicImageView.layoutParams = layoutParamsLinear
 
             dynamicLinearLayout.addView(dynamicImageView)
-
 
             //val containerLayout: LinearLayout = findViewById(R.id.player1_card_panel)
             //containerLayout.addView(dynamicImageView)
@@ -221,7 +269,7 @@ class BlackjackActivity : AppCompatActivity() {
             cardImageView.visibility = ImageView.VISIBLE // Make sure the ImageView is visible
         }
 
-        //todo use code similar to this to hide the dealers 2nd card
+        //hide the dealers 2nd card
         if (player.playerType == PlayerType.DEALER && player.hand.size > 1) {
             // This is likely the dealer's second card (or later).
             // If it's the *initial deal's* second card for the dealer, it should be face down.
@@ -308,7 +356,7 @@ class BlackjackActivity : AppCompatActivity() {
     }
 
     // Inside your Activity or Fragment:
-    fun showInputPrompt() {
+    fun showNewGameInputPrompt() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Enter Game Settings") // More descriptive title
 
@@ -319,14 +367,16 @@ class BlackjackActivity : AppCompatActivity() {
 
         // First EditText for the first value
         val input1 = EditText(this)
-        input1.hint = "Enter Number of Decks" // Example hint for the first input
+        input1.hint = "Enter Number of Players" // Example hint for the first input
         input1.inputType = android.text.InputType.TYPE_CLASS_NUMBER // Specify it's for numbers
+        input1.setText("1")
         layout.addView(input1)
 
         // Second EditText for the second value
         val input2 = EditText(this)
-        input2.hint = "Enter Starting Bet" // Example hint for the second input
+        input2.hint = "Enter Number of Decks in the Shoe" // Example hint for the second input
         input2.inputType = android.text.InputType.TYPE_CLASS_NUMBER // Specify it's for numbers
+        input2.setText("2")
         layout.addView(input2)
 
         builder.setView(layout) // Set the LinearLayout containing the EditTexts as the view
@@ -341,13 +391,11 @@ class BlackjackActivity : AppCompatActivity() {
                 // For demonstration, we'll show them in a Toast
                 Toast.makeText(
                     this,
-                    "Starting game with ${userInput1} decks and bet of ${userInput2}",
-                    Toast.LENGTH_LONG
+                    "Starting game with ${userInput1} players and ${userInput2} decks",
+                    Toast.LENGTH_SHORT
                 ).show()
 
-                // TODO: Pass these values to your game initialization logic
-                // For example: val numDecks = userInput1.toInt(); val startingBet = userInput2.toInt()
-                //             blackjackView.startGame(numDecks, startingBet)
+                startNewGame(userInput1.toInt(), userInput2.toInt())
             } else {
                 Toast.makeText(this, "Please enter both values", Toast.LENGTH_SHORT).show()
             }
@@ -358,5 +406,36 @@ class BlackjackActivity : AppCompatActivity() {
 
         // Show the dialog
         builder.show()
+    }
+
+    fun startNewGame(numPlayers: Int, numDecks: Int) {
+        debugText.text = "clear"
+        player1Label.text = "clear"
+        dealerCard1.setImageResource(0)
+        player1Card1.setImageResource(0)
+        player1Card2.setImageResource(0)
+        dealerCard2.setImageResource(0)
+
+        for (view in listDynamicViews) {
+            player1CardPanel.removeView(view)
+        }
+
+        blackjackGame = BlackjackGame(numPlayers, numDecks)
+
+
+    }
+
+    fun showHandValue(player: Player): String {
+        //get the soft and hard values of the hand
+        var handString: String
+        var softValue: Int
+        softValue = player.getHandSoftValue()
+        handString = "Soft value: " + softValue.toString() + "\n"
+        handString += "Hard value: " + player.getHandHardValue().toString()
+        if (softValue > 21) {
+            handString += "\nBust!!"
+        }
+        return handString
+
     }
 }

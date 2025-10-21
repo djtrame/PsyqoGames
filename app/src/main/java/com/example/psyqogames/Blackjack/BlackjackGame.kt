@@ -3,12 +3,17 @@ package com.example.psyqogames.Blackjack
 // Define a data class to hold the result of dealing a single card
 data class DealResult(val player: Player, val card: Card)
 
-class BlackjackGame(private val _numPlayers: Int = 1) {
+data class CurrentTurn(val player: Player, val turnNumber: Int)
+
+class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int = 1) {
 
     val numPlayers: Int
         get() = _numPlayers
+    val numDecks: Int
+        get() = _numDecks
+
     val players = mutableListOf<Player>()
-    var shoe : Shoe = Shoe(1)
+    var shoe : Shoe = Shoe(numDecks)
 
     var totalCardsToDeal: Int = 0
     var cardsDealt: Int = 0
@@ -16,6 +21,9 @@ class BlackjackGame(private val _numPlayers: Int = 1) {
     var listTableRounds = mutableListOf<TableRound>()
 
     var turnNumber: Int = 1
+
+    lateinit var currentTurn: CurrentTurn
+
 
     // Initialize the game with the specified number of players
     init {
@@ -32,6 +40,7 @@ class BlackjackGame(private val _numPlayers: Int = 1) {
 
         //start the first round
         listTableRounds.add(TableRound(players, turnNumber))
+        currentTurn = CurrentTurn(players[0], turnNumber)
     }
 
     fun startGame() {
@@ -72,6 +81,31 @@ class BlackjackGame(private val _numPlayers: Int = 1) {
             player.hand.add(newCard)
             return DealResult(player = player, card = newCard)
         }
+    }
+
+    //i just added the Player object to the PlayerRound
+    //this should help the BlackjackGame object keep track of the current turn and player, so the rest of the management of that player's turn should be easy
+    fun hit(): DealResult {
+        var currentPlayer = currentTurn.player
+        var currentPlayerRound = getCurrentPlayerRound()
+
+        val newCard: Card? = shoe.drawCard()
+
+        if (newCard != null) {
+            currentPlayer.hand.add(newCard)
+            currentPlayerRound?.listChoices!!.add(PlayerChoice.HIT)
+        }
+        else {
+            throw Exception("Shoe is empty. No more cards to deal.")
+        }
+
+        return DealResult(player = currentPlayer, card = newCard)
+    }
+
+    fun stand() {
+        //the player is satisfied with their hand, so they can stand
+        //the dealer will now take their turn
+
     }
 
     fun getNextPlayerToDealTo(): Player? {
