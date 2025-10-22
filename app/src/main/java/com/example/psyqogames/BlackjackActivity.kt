@@ -19,11 +19,13 @@ import com.example.psyqogames.Blackjack.Player
 import com.example.psyqogames.Blackjack.PlayerChoice
 import com.example.psyqogames.Blackjack.PlayerRound
 import com.example.psyqogames.Blackjack.PlayerType
+import com.example.psyqogames.Blackjack.RoundResult
 import org.w3c.dom.Text
 
 
 class BlackjackActivity : AppCompatActivity() {
     //private lateinit var blackjackView: BlackjackView
+    private lateinit var dealerCardPanel: LinearLayout
     private lateinit var dealerCard1: ImageView
     private lateinit var dealerCard2: ImageView
     private lateinit var player1Card1: ImageView
@@ -61,12 +63,14 @@ class BlackjackActivity : AppCompatActivity() {
         //blackjackGame.printGameState()
 
         //blackjackView = findViewById(R.id.blackjack_view)
+        dealerCardPanel = findViewById(R.id.dealer_card_panel)
         dealerCard1 = findViewById(R.id.dealer_card1_image)
         dealerCard2 = findViewById(R.id.dealer_card2_image)
         debugText = findViewById(R.id.debug_text)
         newGameButton = findViewById(R.id.new_game_button)
         debugButton = findViewById(R.id.debug_button)
         drawCardButton = findViewById(R.id.draw_card_button)
+
         player1CardPanel = findViewById(R.id.player1_card_panel)
         player1Card1 = findViewById(R.id.player1_card1_image)
         player1Card2 = findViewById(R.id.player1_card2_image)
@@ -80,9 +84,6 @@ class BlackjackActivity : AppCompatActivity() {
 
         context = this
         listDynamicViews = mutableListOf<ImageView>()
-
-
-
 
         drawCardButton.setOnClickListener {
             val drawnCard = blackjackGame.shoe.drawCard()
@@ -133,7 +134,7 @@ class BlackjackActivity : AppCompatActivity() {
                     //might need better null handling.  not sure what !! does
                     //todo take the starting bet, and begin to handle hitting and standing
                     //maybe move some of this stuff into BlackjackGame.kt
-                    currentPlayerRound = blackjackGame.getCurrentPlayerRound()!!
+                    currentPlayerRound = blackjackGame.currentPlayerRound
                     currentPlayerRound.startingBet = userInput1.toInt()
                     debugText.text = currentPlayerRound.getPlayerRoundStateAsString()
                 } else {
@@ -173,7 +174,6 @@ class BlackjackActivity : AppCompatActivity() {
         hitButton.setOnClickListener {
             var hitResult = blackjackGame.hit()
 
-
             //for starters just draw a 3rd card in the player 1 card panel.  We'll worry about the rest later
             dynamicImageView = ImageView(context) //trying to use this same object variable in hit button and dd button sections
             dynamicImageView.setImageResource(getResourceIdForCard(hitResult.card))
@@ -197,9 +197,35 @@ class BlackjackActivity : AppCompatActivity() {
 
             listDynamicViews.add(dynamicImageView)
 
-            player1CardPanel.addView(dynamicImageView)
+            if (hitResult.player.playerType == PlayerType.HUMAN) {
+                player1CardPanel.addView(dynamicImageView)
+            }
+            else {
+                dealerCardPanel.addView(dynamicImageView)
+            }
 
+            debugText.text = blackjackGame.getGameStateAsString()
+            //need a better display.  this works for now
             player1Label.text = showHandValue(hitResult.player)
+
+            //this crashes because we haven't initialized roundResult
+            //if the player busted during this hit, we need to move onto the dealer's turn and show their card
+            //however in the hit method we've already handled the bust
+            if (hitResult.bust) {
+                val dealer = blackjackGame.players.last()
+                displayCardForPlayer(dealer, dealer.hand[1], false)
+            }
+        }
+
+        standButton.setOnClickListener {
+            blackjackGame.stand()
+
+            //unhide the dealer's 2nd card
+            val dealer = blackjackGame.players.last()
+            displayCardForPlayer(dealer, dealer.hand[1], false)
+
+            debugText.text = blackjackGame.getGameStateAsString()
+            player1Label.text = showHandValue(blackjackGame.currentPlayerRound.player)
         }
 
         // Double Down Button
@@ -261,7 +287,7 @@ class BlackjackActivity : AppCompatActivity() {
      * Helper function to display a card for a specific player.
      * This is where you'd update the UI without looping through everyone.
      */
-    private fun displayCardForPlayer(player: Player, card: Card) {
+    private fun displayCardForPlayer(player: Player, card: Card, hideDealer: Boolean = true) {
         val cardImageView = getImageViewForPlayerAndCard(player, card)
         if (cardImageView != null) {
             val resourceId = getResourceIdForCard(card) // Your existing helper function
@@ -270,7 +296,7 @@ class BlackjackActivity : AppCompatActivity() {
         }
 
         //hide the dealers 2nd card
-        if (player.playerType == PlayerType.DEALER && player.hand.size > 1) {
+        if (player.playerType == PlayerType.DEALER && player.hand.size > 1 && hideDealer) {
             // This is likely the dealer's second card (or later).
             // If it's the *initial deal's* second card for the dealer, it should be face down.
             // If the game logic itself doesn't distinguish face up/down, you'd add it here.
@@ -416,12 +442,13 @@ class BlackjackActivity : AppCompatActivity() {
         player1Card2.setImageResource(0)
         dealerCard2.setImageResource(0)
 
+        //i'm surprised this works
         for (view in listDynamicViews) {
             player1CardPanel.removeView(view)
+            dealerCardPanel.removeView(view)
         }
 
         blackjackGame = BlackjackGame(numPlayers, numDecks)
-
 
     }
 

@@ -7,10 +7,10 @@ enum class PlayerChoice {
     HIT, STAND, DOUBLE_DOWN, SPLIT
 }
 
-class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 0, private val _player: Player) {
+class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 0, val player: Player) {
 
     //consider adding a Player object to this class..
-    lateinit var _roundResult: RoundResult
+    lateinit var roundResult: RoundResult
     var listChoices = mutableListOf<PlayerChoice>()
     private var _endingBet: Int = 0
 
@@ -35,18 +35,27 @@ class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 
             return _turnNumber
         }
 
+//    var roundResult: RoundResult
+//        get() {
+//            return _roundResult
+//        }
+//        set(value) {
+//            _roundResult = value
+//        }
+
+
     init {
 
     }
 
-    fun getRoundResult(): RoundResult {
-        return _roundResult
-    }
+//    fun getRoundResult(): RoundResult {
+//        return _roundResult
+//    }
 
     fun getPlayerRoundStateAsString(): String {
         var playerRoundState: String = ""
 
-        playerRoundState += "Player Type: " + _player.playerType + "\n"
+        playerRoundState += "Player Type: " + player.playerType + "\n"
         playerRoundState += "Turn Number: " + turnNumber + "\n"
         playerRoundState += "Starting Bet: " + startingBet + "\n"
 
@@ -59,12 +68,11 @@ class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 
         }
         playerRoundState += "Ending Bet: " + endingBet + "\n"
 
-        if (::_roundResult.isInitialized) {
-            playerRoundState += "Round Result: " + _roundResult + "\n"
+        if (::roundResult.isInitialized) {
+            playerRoundState += "Round Result: " + roundResult + "\n"
         } else {
             playerRoundState += "Round Result: Not yet determined\n"
         }
-
 
         return playerRoundState
     }
