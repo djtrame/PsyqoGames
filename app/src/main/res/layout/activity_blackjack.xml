@@ -35,7 +35,7 @@
             android:layout_height="263dp"
             android:text="Debug text"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
+            android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@id/blackjack_table"
             app:layout_constraintEnd_toEndOf="@id/blackjack_table"
             app:layout_constraintStart_toStartOf="@id/blackjack_table"

@@ -28,6 +28,33 @@ class TableRound(private val _playerList: List<Player>, private val _turnNumber:
         }
     }
 
+    fun getTableRoundStateAsString(): String {
+        var tableRoundState: String = ""
+        for (playerRound in playerRounds) {
+            tableRoundState += "Player Type: " + playerRound.player.playerType + "\n"
+            tableRoundState += "Turn Number: " + turnNumber + "\n"
+            tableRoundState += "Starting Bet: " + playerRound.startingBet + "\n"
+
+
+            //if (::listChoices.isInitialized && listChoices.count() > 0) {
+            if (playerRound.listChoices.count() > 0) {
+                for (choice in playerRound.listChoices) {
+                    tableRoundState += "Player Choice: " + choice + "\n"
+                }
+            }
+            tableRoundState += "Ending Bet: " + playerRound.endingBet + "\n"
+
+            tableRoundState += "Round Result: " + playerRound.roundResult + "\n"
+
+            tableRoundState += "-------------------------\n"
+
+        }
+
+
+
+        return tableRoundState
+    }
+
 
 
 

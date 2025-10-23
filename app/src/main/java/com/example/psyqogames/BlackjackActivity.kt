@@ -108,7 +108,9 @@ class BlackjackActivity : AppCompatActivity() {
         // Debug Button
         debugButton.setOnClickListener {
             //shrinkPlayer1CardPanel()
-            debugText.text = blackjackGame.getGameStateAsString()
+            //debugText.text = blackjackGame.getGameStateAsString()
+            //debugText.text = blackjackGame.currentPlayerRound.getPlayerRoundStateAsString()
+            debugText.text = blackjackGame.currentTableRound.getTableRoundStateAsString()
         }
 
         // Bet Button
@@ -216,23 +218,34 @@ class BlackjackActivity : AppCompatActivity() {
                 //oops meant to put this in hit
                 var handSoftValue = blackjackGame.currentPlayerRound.player.getHandSoftValue()
 
-                //dealer stays on soft 17 or higher
-                if (handSoftValue > 16) {
-                    //handle when the dealer busts
-                    if (hitResult.bust) {
-                        dealerHandLabel.setTextColor(resources.getColor(R.color.red))
-                    }
-                    else {
-                        dealerHandLabel.setTextColor(resources.getColor(R.color.black))
-                        //dealer will stay, so handle round end stuff and determine winners/losers
-                    }
-
+                // if the dealer busted color their text red
+                if (hitResult.bust) {
+                    dealerHandLabel.setTextColor(resources.getColor(R.color.red))
+                } //else if their last choice was a Stand, it means they are keeping a soft hand > 16
+                else if (blackjackGame.currentPlayerRound.listChoices.last() == PlayerChoice.STAND) {
+                    dealerHandLabel.setTextColor(resources.getColor(R.color.black))
+                    //dealer will stay, so handle round end stuff and determine winners/losers
                 }
+
+//                //dealer stays on soft 17 or higher
+//                if (handSoftValue > 16) {
+//                    //handle when the dealer busts
+//                    if (hitResult.bust) {
+//                        dealerHandLabel.setTextColor(resources.getColor(R.color.red))
+//                    }
+//                    else {
+//                        dealerHandLabel.setTextColor(resources.getColor(R.color.black))
+//                        //dealer will stay, so handle round end stuff and determine winners/losers
+//                    }
+//                }
+
                 dealerCardPanel.addView(dynamicImageView)
                 dealerHandLabel.text = showHandValue(dealer)
             }
 
             debugText.text = blackjackGame.getGameStateAsString()
+
+            //todo handle coloring dealer hand (with hard 20) after player bust
 
 
 //            //if the player busted during this hit, we need to move onto the dealer's turn and show their card
@@ -253,11 +266,7 @@ class BlackjackActivity : AppCompatActivity() {
                 player1Label.text = showHandValue(blackjackGame.currentPlayerRound.player)
             }
             else {
-
-
                 dealerHandLabel.text = showHandValue(dealer)
-
-
             }
         }
 
