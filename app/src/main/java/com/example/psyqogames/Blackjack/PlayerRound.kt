@@ -1,16 +1,16 @@
 package com.example.psyqogames.Blackjack
 
 enum class RoundResult {
-    BLACKJACK, WIN, LOSE, PUSH
+    BLACKJACK, WIN, LOSE, PUSH, PENDING
 }
 enum class PlayerChoice {
     HIT, STAND, DOUBLE_DOWN, SPLIT
 }
 
-class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 0, val player: Player) {
+class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 0, val player: Player, var roundResult: RoundResult = RoundResult.PENDING) {
 
     //consider adding a Player object to this class..
-    lateinit var roundResult: RoundResult
+
     var listChoices = mutableListOf<PlayerChoice>()
     private var _endingBet: Int = 0
 
@@ -68,11 +68,8 @@ class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 
         }
         playerRoundState += "Ending Bet: " + endingBet + "\n"
 
-        if (::roundResult.isInitialized) {
-            playerRoundState += "Round Result: " + roundResult + "\n"
-        } else {
-            playerRoundState += "Round Result: Not yet determined\n"
-        }
+        playerRoundState += "Round Result: " + roundResult + "\n"
+
 
         return playerRoundState
     }

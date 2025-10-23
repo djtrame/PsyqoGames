@@ -115,6 +115,9 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
         }
 
         return DealResult(player = currentPlayer, card = newCard, bust)
+
+        //handle dealer stuff, like when they'll stand on a softhand > 16
+        //then move onto round end stuff and determine winners/losers
     }
 
     fun stand() {
@@ -138,11 +141,8 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
 
             //todo figure out uninitiazlied property access exception when this gets called on the dealer, who's result is null
             //maybe just make a roundstatus and set it to in progress on creation, and can change to other values later?
-            if (playerRound.roundResult != null) {
-                if (playerRound.listChoices.count() == 0) {
-                    currentPlayerRound = playerRound
-                    return
-                }
+            if (playerRound.roundResult == RoundResult.PENDING) {
+                currentPlayerRound = playerRound
             }
         }
     }

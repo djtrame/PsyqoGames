@@ -81,6 +81,20 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/dealer_hand_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="@id/blackjack_table"
+            app:layout_constraintEnd_toEndOf="@id/blackjack_table"
+            app:layout_constraintHorizontal_bias="0.164"
+            app:layout_constraintStart_toStartOf="@id/blackjack_table"
+            app:layout_constraintTop_toTopOf="@id/blackjack_table"
+            app:layout_constraintVertical_bias="0.728" />
+
+        <TextView
             android:id="@+id/player1_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -93,6 +107,8 @@
             app:layout_constraintStart_toStartOf="@id/blackjack_table"
             app:layout_constraintTop_toTopOf="@id/blackjack_table"
             app:layout_constraintVertical_bias="0.728" />
+
+
 
         <LinearLayout
             android:id="@+id/player1_card_panel"

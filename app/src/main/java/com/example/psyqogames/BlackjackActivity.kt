@@ -41,12 +41,15 @@ class BlackjackActivity : AppCompatActivity() {
     private lateinit var blackjackGame: BlackjackGame
     private lateinit var debugText: TextView
     private lateinit var player1Label: TextView
+    private lateinit var dealerHandLabel: TextView
     private lateinit var player1CardPanel: LinearLayout
     private lateinit var context: Context
     private lateinit var dynamicImageView: ImageView
     private lateinit var dynamicLinearLayout: LinearLayout
     private lateinit var currentPlayerRound: PlayerRound
     private lateinit var listDynamicViews: MutableList<ImageView>
+    private lateinit var dealer : Player
+
 
 
 
@@ -80,7 +83,9 @@ class BlackjackActivity : AppCompatActivity() {
         standButton = findViewById(R.id.stand_button)
         doubleDownButton = findViewById(R.id.double_down_button)
         player1Label = findViewById(R.id.player1_label)
+        dealerHandLabel = findViewById(R.id.dealer_hand_label)
 
+        dealer = blackjackGame.players.last()
 
         context = this
         listDynamicViews = mutableListOf<ImageView>()
@@ -198,34 +203,62 @@ class BlackjackActivity : AppCompatActivity() {
             listDynamicViews.add(dynamicImageView)
 
             if (hitResult.player.playerType == PlayerType.HUMAN) {
+                player1Label.text = showHandValue(hitResult.player)
                 player1CardPanel.addView(dynamicImageView)
+
+                //if the player busted during this hit, we need to move onto the dealer's turn and show their card
+                if (hitResult.bust) {
+                    displayCardForPlayer(dealer, dealer.hand[1], false)
+                    dealerHandLabel.text = showHandValue(dealer)
+                }
             }
             else {
+                //oops meant to put this in hit
+                var handSoftValue = blackjackGame.currentPlayerRound.player.getHandSoftValue()
+
+                //dealer stays on soft 17 or higher
+                if (handSoftValue > 16) {
+                    //handle when the dealer busts
+                    if (hitResult.bust) {
+                        dealerHandLabel.setTextColor(resources.getColor(R.color.red))
+                    }
+                    else {
+                        dealerHandLabel.setTextColor(resources.getColor(R.color.black))
+                        //dealer will stay, so handle round end stuff and determine winners/losers
+                    }
+
+                }
                 dealerCardPanel.addView(dynamicImageView)
+                dealerHandLabel.text = showHandValue(dealer)
             }
 
             debugText.text = blackjackGame.getGameStateAsString()
-            //need a better display.  this works for now
-            player1Label.text = showHandValue(hitResult.player)
 
-            //this crashes because we haven't initialized roundResult
-            //if the player busted during this hit, we need to move onto the dealer's turn and show their card
-            //however in the hit method we've already handled the bust
-            if (hitResult.bust) {
-                val dealer = blackjackGame.players.last()
-                displayCardForPlayer(dealer, dealer.hand[1], false)
-            }
+
+//            //if the player busted during this hit, we need to move onto the dealer's turn and show their card
+//            if (hitResult.bust) {
+//                displayCardForPlayer(dealer, dealer.hand[1], false)
+//                dealerHandLabel.text = showHandValue(dealer)
+//            }
         }
 
         standButton.setOnClickListener {
             blackjackGame.stand()
 
             //unhide the dealer's 2nd card
-            val dealer = blackjackGame.players.last()
             displayCardForPlayer(dealer, dealer.hand[1], false)
 
             debugText.text = blackjackGame.getGameStateAsString()
-            player1Label.text = showHandValue(blackjackGame.currentPlayerRound.player)
+            if (blackjackGame.currentPlayerRound.player.playerType == PlayerType.HUMAN) {
+                player1Label.text = showHandValue(blackjackGame.currentPlayerRound.player)
+            }
+            else {
+
+
+                dealerHandLabel.text = showHandValue(dealer)
+
+
+            }
         }
 
         // Double Down Button
