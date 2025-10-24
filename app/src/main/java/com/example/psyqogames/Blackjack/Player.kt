@@ -5,7 +5,7 @@ enum class PlayerType {
     DEALER, HUMAN, COMPUTER
 }
 
-class Player(private val _playerType: PlayerType) {
+class Player(private val _playerType: PlayerType, var bankRoll: Int) {
 
     val playerType: PlayerType
         get() = _playerType

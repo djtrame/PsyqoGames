@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:text="Dealer"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
+            android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@id/blackjack_table"
             app:layout_constraintEnd_toEndOf="@id/blackjack_table"
             app:layout_constraintStart_toStartOf="@id/blackjack_table"
@@ -31,8 +31,8 @@
 
         <TextView
             android:id="@+id/debug_text"
-            android:layout_width="391dp"
-            android:layout_height="263dp"
+            android:layout_width="388dp"
+            android:layout_height="320dp"
             android:text="Debug text"
             android:textColor="@android:color/white"
             android:textSize="16sp"
@@ -86,7 +86,7 @@
             android:layout_height="wrap_content"
             android:text=""
             android:textColor="@android:color/white"
-            android:textSize="18sp"
+            android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@id/blackjack_table"
             app:layout_constraintEnd_toEndOf="@id/blackjack_table"
             app:layout_constraintHorizontal_bias="0.164"
@@ -100,7 +100,7 @@
             android:layout_height="wrap_content"
             android:text="Player 1"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
+            android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@id/blackjack_table"
             app:layout_constraintEnd_toEndOf="@id/blackjack_table"
             app:layout_constraintHorizontal_bias="0.858"
@@ -148,6 +148,21 @@
 
         </LinearLayout>
 
+
+        <TextView
+            android:id="@+id/player1_bankroll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="$0"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="@id/blackjack_table"
+            app:layout_constraintEnd_toEndOf="@id/blackjack_table"
+            app:layout_constraintHorizontal_bias="0.518"
+            app:layout_constraintStart_toStartOf="@id/blackjack_table"
+            app:layout_constraintTop_toTopOf="@id/blackjack_table"
+            app:layout_constraintVertical_bias="0.996" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <GridLayout
@@ -173,14 +188,14 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:text="Draw Card" />
+            android:text="Debug Game state" />
 
         <Button
             android:id="@+id/debug_button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:text="Debug" />
+            android:text="Debug Table Round" />
 
         <Button
             android:id="@+id/deal_button"

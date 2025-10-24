@@ -1,13 +1,13 @@
 package com.example.psyqogames.Blackjack
 
-enum class RoundResult {
+enum class PlayerRoundResult {
     BLACKJACK, WIN, LOSE, PUSH, PENDING
 }
 enum class PlayerChoice {
     HIT, STAND, DOUBLE_DOWN, SPLIT
 }
 
-class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 0, val player: Player, var roundResult: RoundResult = RoundResult.PENDING) {
+class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 0, val player: Player, var playerRoundResult: PlayerRoundResult = PlayerRoundResult.PENDING) {
 
     //consider adding a Player object to this class..
 
@@ -28,6 +28,7 @@ class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 
         }
         set(value) {
             _startingBet = value
+            _endingBet = value //upon the first bet, just set ending bet to the same value.  we can update it later if we need.
         }
 
     var turnNumber: Int = 0
@@ -35,21 +36,20 @@ class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 
             return _turnNumber
         }
 
-//    var roundResult: RoundResult
+//    var PlayerRoundResult: PlayerRoundResult
 //        get() {
-//            return _roundResult
+//            return _PlayerRoundResult
 //        }
 //        set(value) {
-//            _roundResult = value
+//            _PlayerRoundResult = value
 //        }
 
 
     init {
-
     }
 
-//    fun getRoundResult(): RoundResult {
-//        return _roundResult
+//    fun getPlayerRoundResult(): PlayerRoundResult {
+//        return _PlayerRoundResult
 //    }
 
     fun getPlayerRoundStateAsString(): String {
@@ -68,7 +68,7 @@ class PlayerRound(private var _startingBet: Int, private val _turnNumber: Int = 
         }
         playerRoundState += "Ending Bet: " + endingBet + "\n"
 
-        playerRoundState += "Round Result: " + roundResult + "\n"
+        playerRoundState += "Round Result: " + playerRoundResult + "\n"
 
 
         return playerRoundState

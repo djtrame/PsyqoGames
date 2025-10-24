@@ -1,6 +1,9 @@
 package com.example.psyqogames.Blackjack
 
-class TableRound(private val _playerList: List<Player>, private val _turnNumber: Int) {
+enum class TableRoundResult {
+    COMPLETE, PENDING
+}
+class TableRound(private val _playerList: List<Player>, private val _turnNumber: Int, var tableRoundResult: TableRoundResult = TableRoundResult.PENDING) {
 
     var turnNumber: Int = 0
         get() {
@@ -25,6 +28,8 @@ class TableRound(private val _playerList: List<Player>, private val _turnNumber:
         for (player in _playerList) {
             var playerRound = PlayerRound(0, _turnNumber, player)
             playerRounds.add(playerRound)
+            //clear out of hand of the player
+            playerRound.player.hand.clear()
         }
     }
 
@@ -44,7 +49,7 @@ class TableRound(private val _playerList: List<Player>, private val _turnNumber:
             }
             tableRoundState += "Ending Bet: " + playerRound.endingBet + "\n"
 
-            tableRoundState += "Round Result: " + playerRound.roundResult + "\n"
+            tableRoundState += "Round Result: " + playerRound.playerRoundResult + "\n"
 
             tableRoundState += "-------------------------\n"
 

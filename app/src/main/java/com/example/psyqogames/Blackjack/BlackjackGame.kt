@@ -13,6 +13,9 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
     val players = mutableListOf<Player>()
     var shoe : Shoe = Shoe(numDecks)
 
+    //constant representing 3:2 payout
+    val BLACKJACK_PAYOUT: Float = 1.5f
+
     var totalCardsToDeal: Int = 0
     var cardsDealt: Int = 0
 
@@ -22,8 +25,6 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
 
     lateinit var currentTableRound: TableRound
     lateinit var currentPlayerRound: PlayerRound
-
-
     lateinit var dealer: Player
 
 
@@ -33,23 +34,23 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
 
             //add players first
             for (i in 1..numPlayers) {
-                players.add(Player(PlayerType.HUMAN))
+                players.add(Player(PlayerType.HUMAN, 100))
                 totalCardsToDeal = totalCardsToDeal + 2
             }
 
         //add a dealer last
-        players.add(Player(_playerType = PlayerType.DEALER))
+        players.add(Player(_playerType = PlayerType.DEALER, 0))
         dealer = players.last()
-
-        //start the first round
-        currentTableRound = TableRound(players, turnNumber)
-        listTableRounds.add(currentTableRound)
-        currentPlayerRound = listTableRounds[0].playerRounds[0]
-        //currentTurn = CurrentTurn(players[0], turnNumber)
     }
 
-    fun startGame() {
-
+    //when a player makes a bet, start the round
+    fun startRound(bet: Int) {
+        currentTableRound = TableRound(players, turnNumber)
+        listTableRounds.add(currentTableRound)
+        currentPlayerRound = currentTableRound.playerRounds[0]
+        currentPlayerRound.startingBet = bet
+        currentPlayerRound.player.bankRoll -= bet
+        cardsDealt = 0
     }
 
     //fun getCurrentPlayerRound(): PlayerRound? {
@@ -60,7 +61,7 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
 //
 //        //get the current PlayerRound if they haven't bet yet
 //        for (playerRound in tableRound.playerRounds) {
-//        if (playerRound.getRoundResult() == null) {
+//        if (playerRound.getPlayerRoundResult() == null) {
 //            return playerRound
 //        }
 
@@ -92,11 +93,37 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
         else
         {
             player.hand.add(newCard)
-            return DealResult(player = player, card = newCard, false)
 
-            //todo handle dealer blackjack here
+            return DealResult(player = player, card = newCard, false)
         }
     }
+
+    fun checkForBlackjack() {
+        //todo handle blackjack here
+        //if both have blackjack it's a push
+        if (cardsDealt == totalCardsToDeal) {
+            var dealerHandValue = dealer.getBestHandValue()
+            var playerHandValue = currentPlayerRound.player.getBestHandValue()
+
+            if (dealerHandValue == 21) {
+                if (dealerHandValue == playerHandValue) {
+                    currentPlayerRound.playerRoundResult = PlayerRoundResult.PUSH
+                }
+                else {
+                    currentTableRound.playerRounds.last().playerRoundResult = PlayerRoundResult.BLACKJACK
+                }
+
+                finalizeTableRound()
+                return
+            }
+            else if (playerHandValue == 21) {
+                currentPlayerRound.playerRoundResult = PlayerRoundResult.BLACKJACK
+                finalizeTableRound()
+                return
+            }
+        }
+    }
+
 
     //i just added the Player object to the PlayerRound
     //this should help the BlackjackGame object keep track of the current turn and player, so the rest of the management of that player's turn should be easy
@@ -111,11 +138,11 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
             currentPlayer.hand.add(newCard)
             currentPlayerRound.listChoices.add(PlayerChoice.HIT)
 
-            var handSoftValue = currentPlayer.getHandSoftValue()
+            var bestHandValue = currentPlayer.getBestHandValue()
 
             //if this player busted, mark that they lost this round
-            if (handSoftValue > 21) {
-                currentPlayerRound.roundResult = RoundResult.LOSE
+            if (bestHandValue > 21) {
+                currentPlayerRound.playerRoundResult = PlayerRoundResult.LOSE
                 bust = true
 
                 //if the dealer busted, end the TableRound
@@ -125,10 +152,15 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
                 //else, if the player is not a dealer, then move onto the next player
                 else {
                     nextPlayerRound()
+
+                    //now check that we're onto the dealers turn, and if we are then finalize
+                    if (currentPlayer.playerType == PlayerType.DEALER) {
+                        finalizeTableRound()
+                    }
                 }
             }
             //if this is a dealer and the soft value is > 16 the dealer will stand
-            else if (currentPlayer.playerType == PlayerType.DEALER && handSoftValue > 16) {
+            else if (currentPlayer.playerType == PlayerType.DEALER && bestHandValue > 16) {
                 currentPlayerRound.listChoices.add(PlayerChoice.STAND)
 
                 //end the TableRound
@@ -171,75 +203,100 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
 
     fun finalizeTableRound() {
         //todo handle when player stands and dealer shows higher value and thus wins on the spot
-        //this came up but the player was still showing PENDING
-        //todo multiple aces can be considered 1 or 11
+        //todo mark dealer as a winner when player busts
 
         //get the dealer's result first
-        var dealerHandSoftValue = dealer.getHandSoftValue()
-        var dealerHandHardValue = dealer.getHandHardValue()
+        var dealerBestHandValue = dealer.getBestHandValue()
         var dealerBust = false
+        var dealerRound = currentTableRound.playerRounds.last()
+        turnNumber++
 
-        //currentRound in this case should still be the dealer
-
-
-        if (dealerHandSoftValue > 21) {
+        if (dealerBestHandValue > 21) {
             dealerBust = true
-
         }
 
         //loop through the non-dealer player rounds
         for (playerRound in currentTableRound.playerRounds) {
+
+            //if this is a human player
             if (playerRound.player.playerType != PlayerType.DEALER) {
                 //if this round doesn't already have a result
-                if (playerRound.roundResult == RoundResult.PENDING) {
+                if (playerRound.playerRoundResult == PlayerRoundResult.PENDING) {
                     //compare this players hand against the dealers hand
                     if (!dealerBust) {
                         var bestHandValue = playerRound.player.getBestHandValue()
-                        var dealerBestHandValue = dealer.getBestHandValue()
                         if (bestHandValue > dealerBestHandValue) {
-                            playerRound.roundResult = RoundResult.WIN
+                            playerRound.playerRoundResult = PlayerRoundResult.WIN
+                            playerRound.player.bankRoll += (playerRound.endingBet * 2)
                         }
                         else if (bestHandValue < dealerBestHandValue) {
-                            playerRound.roundResult = RoundResult.LOSE
+                            playerRound.playerRoundResult = PlayerRoundResult.LOSE
+                            dealerRound.playerRoundResult = PlayerRoundResult.WIN
                         } else {
-                            playerRound.roundResult = RoundResult.PUSH
+                            playerRound.playerRoundResult = PlayerRoundResult.PUSH
+                            playerRound.player.bankRoll += playerRound.endingBet
+                            dealerRound.playerRoundResult = PlayerRoundResult.PUSH
                         }
                     }
                     else {
                         //if the dealer busted but we haven't, then we win
-                        playerRound.roundResult = RoundResult.WIN
+                        playerRound.playerRoundResult = PlayerRoundResult.WIN
+                        playerRound.player.bankRoll += (playerRound.endingBet * 2)
+                        dealerRound.playerRoundResult = PlayerRoundResult.LOSE
                     }
+
                 }
-
+                //else if we busted previously, take our money and mark the dealer with a win
+                else if (playerRound.playerRoundResult == PlayerRoundResult.LOSE) {
+                    //playerRound.player.bankRoll -= playerRound.endingBet
+                    dealerRound.playerRoundResult = PlayerRoundResult.WIN
+                }
+                else if (playerRound.playerRoundResult == PlayerRoundResult.BLACKJACK) {
+                    playerRound.player.bankRoll += playerRound.endingBet + (playerRound.endingBet * BLACKJACK_PAYOUT).toInt()
+                }
             }
-
-
+            //if this is the dealer
+            else {
+                //this will get odd marking a dealer as a winner if there are multiple human players
+                //but we just have the one for now, so if the dealer beat any player we'll call it a win
+                //uhh we handled this above when looking at a player
+                //so logically with multiple players the dealer could win against one player, and push against another
+                //worry about that later...dealer result isn't really that important
+                if (dealerRound.playerRoundResult == PlayerRoundResult.PENDING) {
+                    dealerRound.playerRoundResult = PlayerRoundResult.WIN
+                }
+            }
         }
 
-
-
+        currentTableRound.tableRoundResult = TableRoundResult.COMPLETE
     }
 
     fun nextPlayerRound() {
         //loop through the player rounds to see if they have a result or they Stood
         //if so, then move onto the next player
-        for (playerRound in listTableRounds[turnNumber-1].playerRounds) {
-            //if (playerRound.roundResult != null && playerRound.listChoices.last() != PlayerChoice.STAND) {
-
-            //todo figure out uninitiazlied property access exception when this gets called on the dealer, who's result is null
-            //maybe just make a roundstatus and set it to in progress on creation, and can change to other values later?
-            if (playerRound.roundResult == RoundResult.PENDING) {
+        for (playerRound in currentTableRound.playerRounds) {
+            //if the player's round has no result, and they haven't made any choices, then move onto that player's round
+            if (playerRound.playerRoundResult == PlayerRoundResult.PENDING && playerRound.listChoices.count() == 0) {
                 currentPlayerRound = playerRound
 
                 //if we're onto the dealer then check if we need to finalize the round
                 if (currentPlayerRound.player.playerType == PlayerType.DEALER) {
-                    var handSoftValue = currentPlayerRound.player.getHandSoftValue()
+                    var bestHandValue = currentPlayerRound.player.getBestHandValue()
 
-                    if (handSoftValue > 16) {
+                    if (bestHandValue > 16) {
                         currentPlayerRound.listChoices.add(PlayerChoice.STAND)
 
                         //end the TableRound
                         finalizeTableRound()
+                    }
+                }
+            }
+            //else if this player just busted, then the dealer wins when there's just 1 player
+            else {
+                if (currentTableRound.playerList.count() == 2) {
+                    if (playerRound.playerRoundResult == PlayerRoundResult.LOSE) {
+                        finalizeTableRound()
+                        return //short circuit the function if there is just 1 human player and they busted
                     }
                 }
             }
@@ -283,25 +340,35 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
 
         //--- Game State ---
         //Total cards to deal: $totalCardsToDeal
+        if (listTableRounds.isEmpty()) {
+            gameState = gameState + "\nGame not started"
+            return gameState
+            }
 
         for (player in players) {
             gameState = gameState + "\nPlayer Type: " + player.playerType + " Cards in hand: " + player.hand.count()
         }
 
-        for (tableRound in listTableRounds) {
-            gameState = gameState + "\nTable round turn number: " + tableRound.turnNumber
+        //instead of looping through all the table rounds, just print out info from the latest one
+//        for (tableRound in listTableRounds) {
+//        }
+        val tableRound = listTableRounds.last()
 
-            for (playerRound in tableRound.playerRounds) {
-                gameState = gameState + "\n" + playerRound.player.playerType + " turn number: " + playerRound.turnNumber + " Starting Bet: " + playerRound.startingBet
+        gameState = gameState + "\nTable round turn number: " + tableRound.turnNumber
 
-                //print each choice the player made
-                for (choice in playerRound.listChoices) {
-                    gameState = gameState + "\n   Choice: " + choice
-                }
+        for (playerRound in tableRound.playerRounds) {
+            gameState = gameState + "\n" + playerRound.player.playerType + " turn number: " + playerRound.turnNumber + " Starting Bet: " + playerRound.startingBet
+
+            //print each choice the player made
+            for (choice in playerRound.listChoices) {
+                gameState = gameState + "\n   Choice: " + choice
             }
         }
 
+        gameState = gameState + "\nPlayer Bankroll: " + players[0].bankRoll
         gameState = gameState + "\nCurrent Round Player: " + currentPlayerRound.player.playerType
+        gameState = gameState + "\nTable Round Result: " + currentTableRound.tableRoundResult
+
 
         return gameState
     }

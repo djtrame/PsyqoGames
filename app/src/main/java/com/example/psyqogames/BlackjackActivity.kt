@@ -19,7 +19,7 @@ import com.example.psyqogames.Blackjack.Player
 import com.example.psyqogames.Blackjack.PlayerChoice
 import com.example.psyqogames.Blackjack.PlayerRound
 import com.example.psyqogames.Blackjack.PlayerType
-import com.example.psyqogames.Blackjack.RoundResult
+import com.example.psyqogames.Blackjack.PlayerRoundResult
 import org.w3c.dom.Text
 
 
@@ -42,6 +42,7 @@ class BlackjackActivity : AppCompatActivity() {
     private lateinit var debugText: TextView
     private lateinit var player1Label: TextView
     private lateinit var dealerHandLabel: TextView
+    private lateinit var player1bankroll: TextView
     private lateinit var player1CardPanel: LinearLayout
     private lateinit var context: Context
     private lateinit var dynamicImageView: ImageView
@@ -84,20 +85,20 @@ class BlackjackActivity : AppCompatActivity() {
         doubleDownButton = findViewById(R.id.double_down_button)
         player1Label = findViewById(R.id.player1_label)
         dealerHandLabel = findViewById(R.id.dealer_hand_label)
-
-        dealer = blackjackGame.players.last()
+        player1bankroll = findViewById(R.id.player1_bankroll)
 
         context = this
         listDynamicViews = mutableListOf<ImageView>()
 
         drawCardButton.setOnClickListener {
-            val drawnCard = blackjackGame.shoe.drawCard()
-            drawnCard?.let {
-                val resourceId = getResourceIdForCard(it)
-                if (resourceId != 0) {
-                    dealerCard1.setImageResource(resourceId)
-                }
-            }
+            debugText.text = blackjackGame.getGameStateAsString()
+//            val drawnCard = blackjackGame.shoe.drawCard()
+//            drawnCard?.let {
+//                val resourceId = getResourceIdForCard(it)
+//                if (resourceId != 0) {
+//                    dealerCard1.setImageResource(resourceId)
+//                }
+//            }
         }
 
         // New Game Button
@@ -110,11 +111,19 @@ class BlackjackActivity : AppCompatActivity() {
             //shrinkPlayer1CardPanel()
             //debugText.text = blackjackGame.getGameStateAsString()
             //debugText.text = blackjackGame.currentPlayerRound.getPlayerRoundStateAsString()
-            debugText.text = blackjackGame.currentTableRound.getTableRoundStateAsString()
+            if (blackjackGame.listTableRounds.isNotEmpty()) {
+                debugText.text = blackjackGame.currentTableRound.getTableRoundStateAsString()
+            }
+            else {
+                debugText.text = "No Table Rounds"
+            }
+
         }
 
         // Bet Button
         betButton.setOnClickListener {
+            dealer = blackjackGame.players.last()
+            clearGame()
             //prompt for the first player's bet
             val builder = AlertDialog.Builder(this)
             builder.setTitle("Enter Starting Bet")
@@ -128,6 +137,7 @@ class BlackjackActivity : AppCompatActivity() {
             val input1 = EditText(this)
             input1.hint = "Enter Your Starting Bet"
             input1.inputType = android.text.InputType.TYPE_CLASS_NUMBER // Specify it's for numbers
+            input1.setText("5")
             layout.addView(input1)
 
             builder.setView(layout) // Set the LinearLayout containing the EditTexts as the view
@@ -141,9 +151,9 @@ class BlackjackActivity : AppCompatActivity() {
                     //might need better null handling.  not sure what !! does
                     //todo take the starting bet, and begin to handle hitting and standing
                     //maybe move some of this stuff into BlackjackGame.kt
-                    currentPlayerRound = blackjackGame.currentPlayerRound
-                    currentPlayerRound.startingBet = userInput1.toInt()
-                    debugText.text = currentPlayerRound.getPlayerRoundStateAsString()
+                    blackjackGame.startRound(userInput1.toInt())
+                    debugText.text = blackjackGame.currentTableRound.getTableRoundStateAsString()
+                    player1bankroll.text = "$" + blackjackGame.currentTableRound.playerRounds[0].player.bankRoll.toString()
                 } else {
                     //Toast.makeText(this, "Please enter both values", Toast.LENGTH_SHORT).show()
                 }
@@ -170,6 +180,9 @@ class BlackjackActivity : AppCompatActivity() {
                     //get the soft and hard values of the hand
                     player1Label.text = showHandValue(dealInfo.player)
                 }
+
+                blackjackGame.checkForBlackjack()
+
             } ?: run { // If result is null, means no more cards or error
                 Toast.makeText(this, "No more cards to deal for this round.", Toast.LENGTH_SHORT).show()
             }
@@ -210,40 +223,27 @@ class BlackjackActivity : AppCompatActivity() {
 
                 //if the player busted during this hit, we need to move onto the dealer's turn and show their card
                 if (hitResult.bust) {
+                    player1Label.setTextColor(resources.getColor(R.color.red))
                     displayCardForPlayer(dealer, dealer.hand[1], false)
                     dealerHandLabel.text = showHandValue(dealer)
                 }
             }
             else {
-                //oops meant to put this in hit
-                var handSoftValue = blackjackGame.currentPlayerRound.player.getHandSoftValue()
-
                 // if the dealer busted color their text red
                 if (hitResult.bust) {
                     dealerHandLabel.setTextColor(resources.getColor(R.color.red))
-                } //else if their last choice was a Stand, it means they are keeping a soft hand > 16
+                } //else if their last choice was a Stand (cuz dealer > 16 auto stands)
                 else if (blackjackGame.currentPlayerRound.listChoices.last() == PlayerChoice.STAND) {
                     dealerHandLabel.setTextColor(resources.getColor(R.color.black))
                     //dealer will stay, so handle round end stuff and determine winners/losers
                 }
-
-//                //dealer stays on soft 17 or higher
-//                if (handSoftValue > 16) {
-//                    //handle when the dealer busts
-//                    if (hitResult.bust) {
-//                        dealerHandLabel.setTextColor(resources.getColor(R.color.red))
-//                    }
-//                    else {
-//                        dealerHandLabel.setTextColor(resources.getColor(R.color.black))
-//                        //dealer will stay, so handle round end stuff and determine winners/losers
-//                    }
-//                }
 
                 dealerCardPanel.addView(dynamicImageView)
                 dealerHandLabel.text = showHandValue(dealer)
             }
 
             debugText.text = blackjackGame.getGameStateAsString()
+            player1bankroll.text = "$" + blackjackGame.currentTableRound.playerRounds[0].player.bankRoll.toString()
 
             //todo handle coloring dealer hand (with hard 20) after player bust
 
@@ -264,10 +264,22 @@ class BlackjackActivity : AppCompatActivity() {
             debugText.text = blackjackGame.getGameStateAsString()
             if (blackjackGame.currentPlayerRound.player.playerType == PlayerType.HUMAN) {
                 player1Label.text = showHandValue(blackjackGame.currentPlayerRound.player)
+                dealerHandLabel.setTextColor(resources.getColor(R.color.black))
             }
             else {
                 dealerHandLabel.text = showHandValue(dealer)
             }
+
+            //a player stand automatically reveals and evaluates the dealers hand.
+            // If the dealer is already > 16 then color their text black
+            if (blackjackGame.currentPlayerRound.player.playerType == PlayerType.DEALER) {
+                if (blackjackGame.currentPlayerRound.player.getBestHandValue() > 16) {
+                    dealerHandLabel.setTextColor(resources.getColor(R.color.black))
+                }
+            }
+
+
+            player1bankroll.text = "$" + blackjackGame.currentTableRound.playerRounds[0].player.bankRoll.toString()
         }
 
         // Double Down Button
@@ -323,6 +335,8 @@ class BlackjackActivity : AppCompatActivity() {
             //val containerLayout: LinearLayout = findViewById(R.id.player1_card_panel)
             //containerLayout.addView(dynamicImageView)
         }
+
+
     }
 
     /**
@@ -477,8 +491,17 @@ class BlackjackActivity : AppCompatActivity() {
     }
 
     fun startNewGame(numPlayers: Int, numDecks: Int) {
+        clearGame()
+        blackjackGame = BlackjackGame(numPlayers, numDecks)
+        //todo fix crash after trying to stand in a new game
+    }
+
+    fun clearGame() {
         debugText.text = "clear"
         player1Label.text = "clear"
+        player1Label.setTextColor(resources.getColor(R.color.white))
+        dealerHandLabel.text = "clear"
+        dealerHandLabel.setTextColor(resources.getColor(R.color.white))
         dealerCard1.setImageResource(0)
         player1Card1.setImageResource(0)
         player1Card2.setImageResource(0)
@@ -489,19 +512,23 @@ class BlackjackActivity : AppCompatActivity() {
             player1CardPanel.removeView(view)
             dealerCardPanel.removeView(view)
         }
-
-        blackjackGame = BlackjackGame(numPlayers, numDecks)
-
     }
 
     fun showHandValue(player: Player): String {
         //get the soft and hard values of the hand
         var handString: String
         var softValue: Int
+        var hardValue: Int
+        var bestValue: Int
+
         softValue = player.getHandSoftValue()
+        hardValue = player.getHandHardValue()
+        bestValue = player.getBestHandValue()
+
         handString = "Soft value: " + softValue.toString() + "\n"
-        handString += "Hard value: " + player.getHandHardValue().toString()
-        if (softValue > 21) {
+        handString += "Hard value: " + hardValue.toString() +"\n"
+        handString += "Best value: " + bestValue.toString()
+        if (bestValue > 21) {
             handString += "\nBust!!"
         }
         return handString
