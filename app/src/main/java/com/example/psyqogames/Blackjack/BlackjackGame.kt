@@ -3,7 +3,11 @@ package com.example.psyqogames.Blackjack
 // Define a data class to hold the result of dealing a single card
 data class DealResult(val player: Player, val card: Card, val bust: Boolean)
 
-class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int = 1) {
+enum class BlackJackCheckResult {
+    PLAYER, DEALER, BOTH, NONE
+}
+
+class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int = 2) {
 
     val numPlayers: Int
         get() = _numPlayers
@@ -11,7 +15,7 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
         get() = _numDecks
 
     val players = mutableListOf<Player>()
-    var shoe : Shoe = Shoe(numDecks)
+    lateinit var shoe : Shoe
 
     //constant representing 3:2 payout
     val BLACKJACK_PAYOUT: Float = 1.5f
@@ -30,6 +34,7 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
 
     // Initialize the game with the specified number of players
     init {
+        newShoe()
         totalCardsToDeal = 2
 
             //add players first
@@ -43,6 +48,10 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
         dealer = players.last()
     }
 
+    fun newShoe() {
+        shoe = Shoe(numDecks)
+    }
+
     //when a player makes a bet, start the round
     fun startRound(bet: Int) {
         currentTableRound = TableRound(players, turnNumber)
@@ -53,31 +62,15 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
         cardsDealt = 0
     }
 
-    //fun getCurrentPlayerRound(): PlayerRound? {
-        //return currentPlayerRound
-
-        //get the current TableRound
-//        var tableRound : TableRound = listTableRounds.last()
-//
-//        //get the current PlayerRound if they haven't bet yet
-//        for (playerRound in tableRound.playerRounds) {
-//        if (playerRound.getPlayerRoundResult() == null) {
-//            return playerRound
-//        }
-
-
-        //this works but i'm going for a more elegant solution
-        //            if (playerRound.startingBet == 0) {
-//                return playerRound
-//            }
-        //}
-        //all of the players have made a starting bet
-        //return null
-    //}
-
+    //upon a single click of the Deal button the first player will have a card added to their hand
+    //if all the players have a card, the dealer gets a card.  the 2nd dealer card will be displayed face down
     fun deal(): DealResult? {
-        //upon a single click of the Deal button the first player will have a card added to their hand
-        //if all the players have a card, the dealer gets a card.  the 2nd dealer card will be displayed face down
+        //todo if a shoe runs out of cards mid-hand, the game should shuffle the discard pile up
+        //then ensure a full shuffle of all cards after the round ends
+        if (shoe.cards.count() < totalCardsToDeal) {
+            newShoe()
+        }
+
         val player = getNextPlayerToDealTo()
         if (player == null) {
             println("No more players to deal to.")
@@ -98,29 +91,38 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
         }
     }
 
-    fun checkForBlackjack() {
-        //todo handle blackjack here
+    fun checkForBlackjack(): BlackJackCheckResult {
+        //todo when a dealer got a blackjack it showed as a roundresult WIN, instead of Blackjack?  Possibly not a big deal
         //if both have blackjack it's a push
         if (cardsDealt == totalCardsToDeal) {
             var dealerHandValue = dealer.getBestHandValue()
             var playerHandValue = currentPlayerRound.player.getBestHandValue()
 
+            //dealer blackjack
             if (dealerHandValue == 21) {
                 if (dealerHandValue == playerHandValue) {
                     currentPlayerRound.playerRoundResult = PlayerRoundResult.PUSH
+                    finalizeTableRound()
+                    return BlackJackCheckResult.BOTH
                 }
                 else {
                     currentTableRound.playerRounds.last().playerRoundResult = PlayerRoundResult.BLACKJACK
+                    finalizeTableRound()
+                    return BlackJackCheckResult.DEALER
                 }
-
-                finalizeTableRound()
-                return
             }
+            //player blackjack
             else if (playerHandValue == 21) {
                 currentPlayerRound.playerRoundResult = PlayerRoundResult.BLACKJACK
                 finalizeTableRound()
-                return
+                return BlackJackCheckResult.PLAYER
             }
+            else {
+                return BlackJackCheckResult.NONE
+            }
+        }
+        else {
+            return BlackJackCheckResult.NONE
         }
     }
 
@@ -231,7 +233,10 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
                         }
                         else if (bestHandValue < dealerBestHandValue) {
                             playerRound.playerRoundResult = PlayerRoundResult.LOSE
-                            dealerRound.playerRoundResult = PlayerRoundResult.WIN
+                            //by the time we get here we've already checked for a blackjack, so if the dealer has it then leave their result alone
+                            if (dealerRound.playerRoundResult != PlayerRoundResult.BLACKJACK) {
+                                dealerRound.playerRoundResult = PlayerRoundResult.WIN
+                            }
                         } else {
                             playerRound.playerRoundResult = PlayerRoundResult.PUSH
                             playerRound.player.bankRoll += playerRound.endingBet
@@ -251,8 +256,18 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
                     //playerRound.player.bankRoll -= playerRound.endingBet
                     dealerRound.playerRoundResult = PlayerRoundResult.WIN
                 }
+                //else if the player had blackjack, pay them out
+                //todo if the player has blackjack, we need to check for dealer blackjack before we pay the player
+                //both blackjacks is a push
                 else if (playerRound.playerRoundResult == PlayerRoundResult.BLACKJACK) {
-                    playerRound.player.bankRoll += playerRound.endingBet + (playerRound.endingBet * BLACKJACK_PAYOUT).toInt()
+                    if (dealerRound.playerRoundResult == PlayerRoundResult.BLACKJACK) {
+                        playerRound.playerRoundResult = PlayerRoundResult.PUSH
+                        dealerRound.playerRoundResult = PlayerRoundResult.PUSH
+                    }
+                    else {
+                        playerRound.player.bankRoll += playerRound.endingBet + (playerRound.endingBet * BLACKJACK_PAYOUT).toInt()
+                    }
+
                 }
             }
             //if this is the dealer
@@ -267,6 +282,8 @@ class BlackjackGame(private val _numPlayers: Int = 1, private val _numDecks: Int
                 }
             }
         }
+
+        //todo prevent buttons like Hit from doing things when the round is over
 
         currentTableRound.tableRoundResult = TableRoundResult.COMPLETE
     }

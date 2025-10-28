@@ -14,6 +14,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.example.psyqogames.Blackjack.BlackJackCheckResult
 import com.example.psyqogames.Blackjack.BlackjackGame
 import com.example.psyqogames.Blackjack.Player
 import com.example.psyqogames.Blackjack.PlayerChoice
@@ -24,7 +25,6 @@ import org.w3c.dom.Text
 
 
 class BlackjackActivity : AppCompatActivity() {
-    //private lateinit var blackjackView: BlackjackView
     private lateinit var dealerCardPanel: LinearLayout
     private lateinit var dealerCard1: ImageView
     private lateinit var dealerCard2: ImageView
@@ -47,21 +47,18 @@ class BlackjackActivity : AppCompatActivity() {
     private lateinit var context: Context
     private lateinit var dynamicImageView: ImageView
     private lateinit var dynamicLinearLayout: LinearLayout
-    private lateinit var currentPlayerRound: PlayerRound
+    //private lateinit var currentPlayerRound: PlayerRound
     private lateinit var listDynamicViews: MutableList<ImageView>
     private lateinit var dealer : Player
-
-
-
-
     private val CARD_HEIGHT_TO_WIDTH_RATIO = 1.5f
+    private val STARTING_BET = 10
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_blackjack)
 
-        //create a new game with 1 dealer and 1 player
+        //create a new game with 1 dealer and 1 player and 2 decks in a shoe
         blackjackGame = BlackjackGame()
 
         //blackjackGame.printGameState()
@@ -92,13 +89,6 @@ class BlackjackActivity : AppCompatActivity() {
 
         drawCardButton.setOnClickListener {
             debugText.text = blackjackGame.getGameStateAsString()
-//            val drawnCard = blackjackGame.shoe.drawCard()
-//            drawnCard?.let {
-//                val resourceId = getResourceIdForCard(it)
-//                if (resourceId != 0) {
-//                    dealerCard1.setImageResource(resourceId)
-//                }
-//            }
         }
 
         // New Game Button
@@ -137,7 +127,7 @@ class BlackjackActivity : AppCompatActivity() {
             val input1 = EditText(this)
             input1.hint = "Enter Your Starting Bet"
             input1.inputType = android.text.InputType.TYPE_CLASS_NUMBER // Specify it's for numbers
-            input1.setText("5")
+            input1.setText(STARTING_BET.toString())
             layout.addView(input1)
 
             builder.setView(layout) // Set the LinearLayout containing the EditTexts as the view
@@ -148,9 +138,6 @@ class BlackjackActivity : AppCompatActivity() {
 
                 if (userInput1.isNotEmpty()) {
                     //get the current PlayerRound and set their bet equal to this value
-                    //might need better null handling.  not sure what !! does
-                    //todo take the starting bet, and begin to handle hitting and standing
-                    //maybe move some of this stuff into BlackjackGame.kt
                     blackjackGame.startRound(userInput1.toInt())
                     debugText.text = blackjackGame.currentTableRound.getTableRoundStateAsString()
                     player1bankroll.text = "$" + blackjackGame.currentTableRound.playerRounds[0].player.bankRoll.toString()
@@ -181,8 +168,14 @@ class BlackjackActivity : AppCompatActivity() {
                     player1Label.text = showHandValue(dealInfo.player)
                 }
 
-                blackjackGame.checkForBlackjack()
-
+                //if the last card was just dealt, then check for blackjacks
+                if (blackjackGame.cardsDealt == blackjackGame.totalCardsToDeal) {
+                    var blackJackCheck: BlackJackCheckResult = blackjackGame.checkForBlackjack()
+                    if (blackJackCheck == BlackJackCheckResult.DEALER || blackJackCheck == BlackJackCheckResult.BOTH) {
+                        //unhide the dealer's 2nd card
+                        displayCardForPlayer(dealer, dealer.hand[1], false)
+                    }
+                }
             } ?: run { // If result is null, means no more cards or error
                 Toast.makeText(this, "No more cards to deal for this round.", Toast.LENGTH_SHORT).show()
             }
